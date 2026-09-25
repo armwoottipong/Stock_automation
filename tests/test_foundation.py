@@ -63,7 +63,7 @@ def test_all_shipped_registries_validate():
     data = Path(__file__).resolve().parents[1] / "data"
     model_records = load_registry(data / "model_registry.json").records
     assert [record.id for record in model_records] == ["sdxl-base-1.0"]
-    assert model_records[0].installed is False
+    assert model_records[0].installed is True
     for name in ("upscaler", "background", "controlnet"):
         assert load_registry(data / f"{name}_registry.json").records == []
     licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records

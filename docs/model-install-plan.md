@@ -1,6 +1,6 @@
 # SDXL Base 1.0 install plan
 
-**Status:** prepared; checkpoint download awaits the explicit model approval required by the supplied setup document.
+**Status:** approved, installed and smoke-tested. The local file measured 6,938,078,334 bytes and SHA-256 matched the published value on 2026-09-25. The 1024 px generation run completed; see [Phase 3 results](phase-3-results.md).
 
 - Source: official Stability AI Hugging Face repository, pinned revision `462165984030d82259a11f4367a4eed129e94a7b`.
 - File: `sd_xl_base_1.0.safetensors`, 6.94 GB.
