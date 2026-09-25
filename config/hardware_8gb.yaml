@@ -1,0 +1,4 @@
+hardware:
+  target_vram_gb: 8
+  available_vram_gb: 8
+  lowvram: true
