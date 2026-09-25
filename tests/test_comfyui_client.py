@@ -127,3 +127,84 @@ def test_cli_generate_builds_workflow_and_runs_qc(fake_comfyui, tmp_path, capsys
     assert result["status"] == "completed"
     assert calls[0][2]["prompt"]["2"]["inputs"]["text"] == "glass perfume"
     assert (tmp_path / "jobs" / result["job_id"] / "qc.json").is_file()
+
+
+def test_cli_upscale_stages_input_and_runs_pixel_workflow(fake_comfyui, tmp_path, capsys):
+    url, calls = fake_comfyui
+    source = tmp_path / "source.png"
+    Image.new("RGB", (32, 32), "red").save(source)
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    model = models_dir / "RealESRGAN_x2plus.pth"
+    model.write_bytes(b"test")
+    registry = tmp_path / "upscalers.json"
+    registry.write_text(json.dumps({"schema_version": 1, "records": [{
+        "id": "realesrgan-x2plus", "name": "RealESRGAN x2plus", "tasks": ["upscale"],
+        "commercial_use": "allowed", "license": "BSD-3-Clause",
+        "source": "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.2.1",
+        "last_verified": "2026-09-25", "installed": True, "local_path": str(model)
+    }]}), encoding="utf-8")
+    licenses = tmp_path / "licenses.json"
+    licenses.write_text(json.dumps({"schema_version": 1, "records": [{
+        "resource_id": "realesrgan-x2plus", "license": "BSD-3-Clause",
+        "commercial_use": "allowed",
+        "source": "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE",
+        "last_verified": "2026-09-25"
+    }]}), encoding="utf-8")
+    args = ["--url", url, "--jobs-dir", str(tmp_path / "jobs"), "upscale",
+            "--input", str(source), "--registry", str(registry),
+            "--license-registry", str(licenses), "--models-dir", str(models_dir),
+            "--comfy-input-dir", str(tmp_path / "comfy-input")]
+    assert main(args) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "completed"
+    queued = next(call[2]["prompt"] for call in calls if call[:2] == ("POST", "/prompt"))
+    assert queued["2"]["inputs"]["model_name"] == model.name
+    assert (tmp_path / "comfy-input" / queued["1"]["inputs"]["image"]).is_file()
+    assert (tmp_path / "jobs" / result["job_id"] / "qc.json").is_file()
+
+
+def test_cli_creative_upscale_uses_guided_control_image(fake_comfyui, tmp_path, capsys):
+    url, calls = fake_comfyui
+    source = tmp_path / "source.png"
+    Image.new("RGB", (64, 64), "red").save(source)
+    checkpoints_dir = tmp_path / "checkpoints"
+    controlnets_dir = tmp_path / "controlnets"
+    checkpoints_dir.mkdir()
+    controlnets_dir.mkdir()
+    checkpoint = checkpoints_dir / "sdxl.safetensors"
+    controlnet = controlnets_dir / "tile.safetensors"
+    checkpoint.write_bytes(b"test")
+    controlnet.write_bytes(b"test")
+    def registry_file(path, record):
+        path.write_text(json.dumps({"schema_version": 1, "records": [record]}), encoding="utf-8")
+        return path
+    checkpoint_registry = registry_file(tmp_path / "models.json", {
+        "id": "sdxl", "name": "SDXL", "tasks": ["generate"],
+        "commercial_use": "allowed", "license": "OpenRAIL++", "source": "https://example.com/sdxl",
+        "last_verified": "2026-09-25", "installed": True, "local_path": str(checkpoint),
+    })
+    controlnet_registry = registry_file(tmp_path / "controlnets.json", {
+        "id": "tile", "name": "Tile", "tasks": ["creative_upscale"],
+        "commercial_use": "allowed", "license": "Apache-2.0", "source": "https://example.com/tile",
+        "last_verified": "2026-09-25", "installed": True, "local_path": str(controlnet),
+    })
+    licenses = tmp_path / "licenses.json"
+    licenses.write_text(json.dumps({"schema_version": 1, "records": [
+        {"resource_id": "sdxl", "license": "OpenRAIL++", "commercial_use": "allowed",
+         "source": "https://example.com/sdxl", "last_verified": "2026-09-25"},
+        {"resource_id": "tile", "license": "Apache-2.0", "commercial_use": "allowed",
+         "source": "https://example.com/tile", "last_verified": "2026-09-25"},
+    ]}), encoding="utf-8")
+    assert main(["--url", url, "--jobs-dir", str(tmp_path / "jobs"), "creative-upscale",
+                 "--input", str(source), "--prompt", "glass reflection", "--checkpoint-id", "sdxl",
+                 "--controlnet-id", "tile", "--checkpoint-registry", str(checkpoint_registry),
+                 "--controlnet-registry", str(controlnet_registry), "--license-registry", str(licenses),
+                 "--checkpoints-dir", str(checkpoints_dir), "--controlnets-dir", str(controlnets_dir),
+                 "--comfy-input-dir", str(tmp_path / "comfy-input")]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "completed"
+    queued = next(call[2]["prompt"] for call in calls if call[:2] == ("POST", "/prompt"))
+    assert queued["8"]["class_type"] == "UltimateSDUpscaleNoUpscale"
+    assert (tmp_path / "comfy-input" / queued["2"]["inputs"]["image"]).is_file()
+    assert (tmp_path / "jobs" / result["job_id"] / "qc.json").is_file()

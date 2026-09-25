@@ -11,6 +11,17 @@
       "installed": true,
       "local_path": "vendor/ComfyUI",
       "last_verified": "2026-09-25"
+    },
+    {
+      "id": "ultimate-sd-upscale",
+      "name": "ComfyUI Ultimate SD Upscale",
+      "version": "1.7.2+a5547db",
+      "source": "https://github.com/ssitu/ComfyUI_UltimateSDUpscale/tree/a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df",
+      "license": "GPL-3.0",
+      "commercial_use": "allowed",
+      "installed": true,
+      "local_path": "vendor/ComfyUI/custom_nodes/ComfyUI_UltimateSDUpscale",
+      "last_verified": "2026-09-25"
     }
   ]
 }

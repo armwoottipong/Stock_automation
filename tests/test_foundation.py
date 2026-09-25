@@ -64,13 +64,16 @@ def test_all_shipped_registries_validate():
     model_records = load_registry(data / "model_registry.json").records
     assert [record.id for record in model_records] == ["sdxl-base-1.0"]
     assert model_records[0].installed is True
-    for name in ("upscaler", "background", "controlnet"):
-        assert load_registry(data / f"{name}_registry.json").records == []
+    assert [record.id for record in load_registry(data / "upscaler_registry.json").records] == ["realesrgan-x2plus"]
+    assert [record.id for record in load_registry(data / "controlnet_registry.json").records] == ["xinsir-tile-sdxl-1.0"]
+    assert load_registry(data / "background_registry.json").records == []
     licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records
     tools = ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records
-    assert [record.resource_id for record in licenses] == ["comfyui", "sdxl-base-1.0"]
-    assert [record.id for record in tools] == ["comfyui"]
-    assert tools[0].installed is True
+    assert [record.resource_id for record in licenses] == [
+        "comfyui", "sdxl-base-1.0", "realesrgan-x2plus", "xinsir-tile-sdxl-1.0", "ultimate-sd-upscale",
+    ]
+    assert [record.id for record in tools] == ["comfyui", "ultimate-sd-upscale"]
+    assert all(record.installed for record in tools)
     assert ResearchCache.model_validate_json((data / "research_cache.json").read_text(encoding="utf-8")).entries == []
 
 

@@ -14,6 +14,27 @@
       "commercial_use": "allowed",
       "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/462165984030d82259a11f4367a4eed129e94a7b/LICENSE.md",
       "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "realesrgan-x2plus",
+      "license": "BSD-3-Clause",
+      "commercial_use": "allowed",
+      "source": "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE",
+      "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "xinsir-tile-sdxl-1.0",
+      "license": "Apache-2.0",
+      "commercial_use": "allowed",
+      "source": "https://huggingface.co/xinsir/controlnet-tile-sdxl-1.0",
+      "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "ultimate-sd-upscale",
+      "license": "GPL-3.0",
+      "commercial_use": "allowed",
+      "source": "https://github.com/ssitu/ComfyUI_UltimateSDUpscale/blob/a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df/LICENSE",
+      "last_verified": "2026-09-25"
     }
   ]
 }

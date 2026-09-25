@@ -7,7 +7,7 @@ name = "ai-image-automation"
 version = "0.1.0"
 description = "Local AI image automation foundation"
 requires-python = ">=3.12"
-dependencies = ["pydantic>=2.9,<3", "PyYAML>=6,<7", "Pillow>=10,<13"]
+dependencies = ["pydantic>=2.9,<3", "PyYAML>=6,<7", "Pillow>=10,<13", "numpy>=2,<3", "scipy>=1.14,<2"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9"]

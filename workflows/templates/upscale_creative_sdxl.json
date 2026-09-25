@@ -1,0 +1,11 @@
+{
+  "1": {"class_type": "LoadImage", "inputs": {"image": "input.png"}},
+  "2": {"class_type": "LoadImage", "inputs": {"image": "guided.png"}},
+  "3": {"class_type": "CheckpointLoaderSimple", "inputs": {"ckpt_name": "sd_xl_base_1.0.safetensors"}},
+  "4": {"class_type": "CLIPTextEncode", "inputs": {"text": "enhance realistic detail", "clip": ["3", 1]}},
+  "5": {"class_type": "CLIPTextEncode", "inputs": {"text": "text, watermark", "clip": ["3", 1]}},
+  "6": {"class_type": "ControlNetLoader", "inputs": {"control_net_name": "tile.safetensors"}},
+  "7": {"class_type": "ControlNetApplyAdvanced", "inputs": {"positive": ["4", 0], "negative": ["5", 0], "control_net": ["6", 0], "image": ["2", 0], "strength": 0.88, "start_percent": 0.0, "end_percent": 0.75}},
+  "8": {"class_type": "UltimateSDUpscaleNoUpscale", "inputs": {"upscaled_image": ["1", 0], "model": ["3", 0], "positive": ["7", 0], "negative": ["7", 1], "vae": ["3", 2], "seed": 0, "steps": 26, "cfg": 5.0, "sampler_name": "dpmpp_2m", "scheduler": "karras", "denoise": 0.34, "mode_type": "Chess", "tile_width": 768, "tile_height": 768, "mask_blur": 8, "tile_padding": 64, "seam_fix_mode": "Half Tile", "seam_fix_denoise": 0.14, "seam_fix_width": 64, "seam_fix_mask_blur": 16, "seam_fix_padding": 16, "force_uniform_tiles": true, "tiled_decode": true, "batch_size": 1}},
+  "9": {"class_type": "SaveImage", "inputs": {"filename_prefix": "upscale_creative", "images": ["8", 0]}}
+}

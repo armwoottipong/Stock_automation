@@ -1,13 +1,13 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–3 are complete. SDXL Base 1.0 is installed locally and has passed one 1024 px low-VRAM generation smoke test.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–3 are complete. Phase 4 upscale workflows are implemented but await model-download approval and live model validation.**
 
 ## Current state
 
 - Windows 11 Pro; Python 3.12.6; RTX 4060 (8188 MiB), NVIDIA driver 591.86.
 - The active global Python has CPU-only PyTorch 2.10.0. ComfyUI uses a separate `.venv-comfyui` environment with CUDA-enabled PyTorch.
 - The initial inspection found no ComfyUI installation. An official ComfyUI 0.37.0 checkout is now in `vendor/ComfyUI`, excluded from this repository. Its revision and license are recorded in `data/`.
-- SDXL Base 1.0 is registered with source, license and SHA-256. Upscale and background model registries remain empty.
+- SDXL Base 1.0 is registered with source, license and SHA-256. The proposed Phase 4 pixel upscaler and ControlNet are registered as not installed. Background model registry remains empty.
 
 ## Phase 1 commands
 
@@ -20,7 +20,7 @@ python -c "from ai_image_automation.config import load_settings; print(load_sett
 
 `config/default.yaml` is the baseline configuration. `config/hardware_8gb.yaml` records the hardware profile. Settings are validated by Pydantic; registry files are validated by the models in `src/ai_image_automation/registry.py`. Runtime logs use JSON Lines.
 
-See [implementation plan](docs/implementation-plan.md) for the remaining phases. Generation and upscale CLI commands, production workflows, model selection, background removal, and batch rendering arrive in later phases.
+See [implementation plan](docs/implementation-plan.md) for the remaining phases. Background removal, routing, and batch rendering arrive in later phases.
 
 ## Phase 2 API commands
 
@@ -57,3 +57,14 @@ python controller.py generate --prompt "premium perfume bottle, studio product p
 The controller freezes the API workflow in `jobs/<job_id>/workflow.json`, records the request and prompt, and writes deterministic image checks to `jobs/<job_id>/qc.json`. The current checks cover integrity, dimensions and blank output; they do not score artistic or photographic quality.
 
 The initial perfume bottle test generated illegible label text despite the negative prompt. Review any text-heavy commercial output manually or use a workflow that applies real label artwork separately.
+
+## Phase 4 upscale preparation
+
+The `upscale` command stages an existing image in ComfyUI's input folder, runs a 2× model-backed pixel workflow, and checks output dimensions. `creative-upscale` prepares a guided-filter control image and uses SDXL ControlNet Tile with Ultimate SD Upscale, Half Tile seam fix, and tiled VAE decode. Both commands check registered licenses for commercial jobs and save request, workflow, and QC files under `jobs/<job_id>/`.
+
+The [Phase 4 install plan](docs/phase-4-install-plan.md) lists the proposed models, license sources, disk estimate, and validation steps. The model files have not been downloaded yet. Once approved and verified, run:
+
+```powershell
+python controller.py upscale --input jobs\f217d9f361e42991\output\image_001.png
+python controller.py creative-upscale --input path\to\pixel_output.png --prompt "refine glass reflections and fine edges without changing bottle shape"
+```

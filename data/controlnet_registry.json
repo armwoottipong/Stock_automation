@@ -1,1 +1,26 @@
-{"schema_version": 1, "records": []}
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "xinsir-tile-sdxl-1.0",
+      "name": "xinsir SDXL ControlNet Tile",
+      "version": "1.0",
+      "category": ["controlnet", "tile", "sdxl"],
+      "tasks": ["creative_upscale"],
+      "vram_gb": null,
+      "precision": ["fp16"],
+      "commercial_use": "allowed",
+      "license": "Apache-2.0",
+      "source": "https://huggingface.co/xinsir/controlnet-tile-sdxl-1.0/tree/1ae8d9529efe58f7362a987363ff86a7904dc84f",
+      "comfyui": true,
+      "python": true,
+      "installed": false,
+      "local_path": "vendor/ComfyUI/models/controlnet/xinsir-controlnet-tile-sdxl-1.0.safetensors",
+      "sha256": "9f23ba7be22bf8796c12565e00ea4b287acac982cdf384d368a8b18b6990e011",
+      "strengths": ["Official publisher weights", "SDXL tile structure guidance"],
+      "weaknesses": ["Large model file", "8 GB fit untested"],
+      "known_issues": ["ComfyUI loading and combined SDXL VRAM await live test"],
+      "last_verified": "2026-09-25"
+    }
+  ]
+}
