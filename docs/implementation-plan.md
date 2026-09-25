@@ -9,7 +9,7 @@ The supplied setup document is a requirements source. Its suggested model names 
 ## Phases
 
 1. **Foundation (current):** inspect OS, Python, CUDA, GPU, ComfyUI, models, nodes, workflows; create structure, validated config and registries, logging, tests.
-2. **ComfyUI controller:** isolated CUDA environment, health check, queue and monitor API jobs, collect outputs, status and checkpoint persistence, resume.
+2. **ComfyUI controller (complete):** isolated CUDA environment, health check, queue and monitor API jobs, collect outputs, status and checkpoint persistence, resume. Tests use a local fake HTTP server; a live API smoke job produced a 64×64 PNG and resume returned the same job.
 3. **Generation:** verified SDXL checkpoint and API workflow, prompt/parameter injection, output QC. Confirm model license before download.
 4. **Upscale:** pixel upscale, guided filter, ControlNet Tile, creative upscale, seam fix, tiled VAE, low-VRAM retry. Verify node repositories before install.
 5. **Background research:** compare at most three candidates using official sources and a 1–3 image per category benchmark; check license, 8 GB fit, Windows/CUDA and ComfyUI/Python compatibility; record a default and fallback by subject type if needed.

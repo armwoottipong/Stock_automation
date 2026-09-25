@@ -1,6 +1,6 @@
 # Project instructions
 
-- Follow `docs/implementation-plan.md` phase order. Phase 1 is the current completed foundation; do not treat later phases as implemented.
+- Follow `docs/implementation-plan.md` phase order. Phases 1–2 are complete. Do not treat later phases as implemented.
 - Keep planning separate from execution: freeze job configuration, then let Python and ComfyUI run without LLM calls in the render loop.
 - Read all seven `data/*registry.json` files before researching a model. Do not mark a model commercially usable without an official license source and verification date.
 - Do not select a background removal default until the Phase 5 comparison and small benchmark are complete. Treat BiRefNet as one candidate only.

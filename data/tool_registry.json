@@ -1,1 +1,16 @@
-{"schema_version": 1, "records": []}
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "comfyui",
+      "name": "ComfyUI",
+      "version": "0.37.0",
+      "source": "https://github.com/Comfy-Org/ComfyUI/tree/88ab4a06566454ad89db8f0bedb970d6c08cd1b7",
+      "license": "GPL-3.0",
+      "commercial_use": "allowed",
+      "installed": true,
+      "local_path": "vendor/ComfyUI",
+      "last_verified": "2026-09-25"
+    }
+  ]
+}

@@ -1,1 +1,12 @@
-{"schema_version": 1, "records": []}
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "resource_id": "comfyui",
+      "license": "GPL-3.0",
+      "commercial_use": "allowed",
+      "source": "https://github.com/Comfy-Org/ComfyUI/blob/88ab4a06566454ad89db8f0bedb970d6c08cd1b7/LICENSE",
+      "last_verified": "2026-09-25"
+    }
+  ]
+}

@@ -1,12 +1,12 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phase 1 foundation is implemented; image jobs are not runnable yet.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–2 are complete. Image generation models and production workflows are not installed yet.**
 
 ## Current state
 
 - Windows 11 Pro; Python 3.12.6; RTX 4060 (8188 MiB), NVIDIA driver 591.86.
-- The active global Python has CPU-only PyTorch 2.10.0. A separate CUDA environment is needed for ComfyUI.
-- No ComfyUI installation or API listener was found during the initial inspection.
+- The active global Python has CPU-only PyTorch 2.10.0. ComfyUI uses a separate `.venv-comfyui` environment with CUDA-enabled PyTorch.
+- The initial inspection found no ComfyUI installation. An official ComfyUI 0.37.0 checkout is now in `vendor/ComfyUI`, excluded from this repository. Its revision and license are recorded in `data/`.
 - Model, license, tool, and research registries start empty. No model has been verified or selected.
 
 ## Phase 1 commands
@@ -20,4 +20,25 @@ python -c "from ai_image_automation.config import load_settings; print(load_sett
 
 `config/default.yaml` is the baseline configuration. `config/hardware_8gb.yaml` records the hardware profile. Settings are validated by Pydantic; registry files are validated by the models in `src/ai_image_automation/registry.py`. Runtime logs use JSON Lines.
 
-See [implementation plan](docs/implementation-plan.md) for the remaining phases. CLI commands, ComfyUI workflows, model selection, background removal, and batch rendering arrive in later phases.
+See [implementation plan](docs/implementation-plan.md) for the remaining phases. Generation and upscale CLI commands, production workflows, model selection, background removal, and batch rendering arrive in later phases.
+
+## Phase 2 API commands
+
+Start ComfyUI in one PowerShell terminal:
+
+```powershell
+cd D:\Stock_automation
+.\scripts\start_comfyui.ps1
+```
+
+In another terminal, check the API or submit an exported **API-format** ComfyUI workflow:
+
+```powershell
+python controller.py health
+python controller.py submit --workflow path\to\workflow_api.json
+python controller.py resume JOB_ID
+```
+
+Submitted workflows are saved under `jobs/<job_id>/` with a status checkpoint. Repeating the same workflow resumes a queued job or returns a completed job without queueing it again. These commands require a running ComfyUI server. No checkpoint model is bundled with this repository.
+
+To smoke-test the API without a model, submit `workflows/templates/api_smoke_empty_image.json`; it produces a 64×64 PNG.

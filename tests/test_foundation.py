@@ -61,8 +61,11 @@ def test_all_shipped_registries_validate():
     data = Path(__file__).resolve().parents[1] / "data"
     for name in ("model", "upscaler", "background", "controlnet"):
         assert load_registry(data / f"{name}_registry.json").records == []
-    assert LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records == []
-    assert ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records == []
+    licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records
+    tools = ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records
+    assert [record.resource_id for record in licenses] == ["comfyui"]
+    assert [record.id for record in tools] == ["comfyui"]
+    assert tools[0].installed is True
     assert ResearchCache.model_validate_json((data / "research_cache.json").read_text(encoding="utf-8")).entries == []
 
 
