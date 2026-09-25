@@ -36,7 +36,8 @@ class GenerationSettings(StrictModel):
     height: int = Field(default=1024, gt=0)
     steps: int = Field(default=26, ge=1, le=100)
     cfg: float = Field(default=5.0, gt=0)
-    sampler: str = "DPM++ 2M Karras"
+    sampler_name: str = "dpmpp_2m"
+    scheduler: str = "karras"
 
 
 class Settings(StrictModel):

@@ -1,1 +1,26 @@
-{"schema_version": 1, "records": []}
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "id": "sdxl-base-1.0",
+      "name": "Stable Diffusion XL Base 1.0",
+      "version": "1.0",
+      "category": ["checkpoint", "sdxl"],
+      "tasks": ["generate"],
+      "vram_gb": null,
+      "precision": ["fp16"],
+      "commercial_use": "allowed",
+      "license": "CreativeML Open RAIL++-M",
+      "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/tree/462165984030d82259a11f4367a4eed129e94a7b",
+      "comfyui": true,
+      "python": true,
+      "installed": false,
+      "local_path": "vendor/ComfyUI/models/checkpoints/sd_xl_base_1.0.safetensors",
+      "sha256": "31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b",
+      "strengths": ["Official SDXL base checkpoint", "Clear published license", "Native ComfyUI checkpoint workflow"],
+      "weaknesses": ["Photorealistic quality may trail specialized fine-tunes"],
+      "known_issues": ["8 GB low-VRAM generation has not yet been smoke-tested with this checkpoint", "License has use-based restrictions"],
+      "last_verified": "2026-09-25"
+    }
+  ]
+}

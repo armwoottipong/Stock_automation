@@ -8,7 +8,10 @@ from typing import Sequence
 
 from ai_image_automation.comfyui.client import ComfyUIClient, ComfyUIError
 from ai_image_automation.config import ROOT, load_settings
+from ai_image_automation.generation import GenerationRequest, build_sdxl_workflow, resolve_checkpoint
 from ai_image_automation.jobs.runner import JobRunner
+from ai_image_automation.quality.image_qc import check_generated_image
+from ai_image_automation.registry import LicenseRegistry, load_registry
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -22,12 +25,60 @@ def main(argv: Sequence[str] | None = None) -> int:
     submit.add_argument("--workflow", type=Path, required=True)
     resume = commands.add_parser("resume", help="Resume a queued job")
     resume.add_argument("job_id")
+    generate = commands.add_parser("generate", help="Generate one image with a registered SDXL checkpoint")
+    generate.add_argument("--prompt", required=True)
+    generate.add_argument("--negative-prompt", default="")
+    generate.add_argument("--model-id", default="sdxl-base-1.0")
+    generate.add_argument("--registry", type=Path, default=ROOT / "data" / "model_registry.json")
+    generate.add_argument("--license-registry", type=Path, default=ROOT / "data" / "license_registry.json")
+    generate.add_argument("--checkpoints-dir", type=Path, default=ROOT / "vendor" / "ComfyUI" / "models" / "checkpoints")
+    generate.add_argument("--noncommercial", action="store_true")
+    generate.add_argument("--width", type=int, default=settings.generation.width)
+    generate.add_argument("--height", type=int, default=settings.generation.height)
+    generate.add_argument("--steps", type=int, default=settings.generation.steps)
+    generate.add_argument("--cfg", type=float, default=settings.generation.cfg)
+    generate.add_argument("--sampler-name", default=settings.generation.sampler_name)
+    generate.add_argument("--scheduler", default=settings.generation.scheduler)
+    generate.add_argument("--seed", type=int, default=0)
     args = parser.parse_args(argv)
 
     client = ComfyUIClient(args.url, timeout_seconds=settings.comfyui.timeout_seconds)
     try:
         if args.command == "health":
             result = client.health()
+        elif args.command == "generate":
+            request = GenerationRequest(
+                prompt=args.prompt, negative_prompt=args.negative_prompt,
+                width=args.width, height=args.height, steps=args.steps,
+                cfg=args.cfg, seed=args.seed, sampler_name=args.sampler_name,
+                scheduler=args.scheduler,
+            )
+            licenses = LicenseRegistry.model_validate_json(args.license_registry.read_text(encoding="utf-8"))
+            model = resolve_checkpoint(
+                load_registry(args.registry), args.model_id,
+                commercial=not args.noncommercial, licenses=licenses,
+            )
+            model_path = Path(model.local_path or "")
+            if not model_path.is_absolute():
+                model_path = ROOT / model_path
+            if not model_path.resolve().is_relative_to(args.checkpoints_dir.resolve()):
+                raise ValueError("Checkpoint must be inside the ComfyUI checkpoints directory")
+            workflow = build_sdxl_workflow(request, model)
+            record = JobRunner(client, args.jobs_dir).run(workflow)
+            job_dir = args.jobs_dir / record.job_id
+            (job_dir / "request.json").write_text(
+                json.dumps({**request.model_dump(), "model_id": model.id, "commercial": not args.noncommercial}, indent=2),
+                encoding="utf-8",
+            )
+            (job_dir / "prompt.txt").write_text(request.prompt + "\n", encoding="utf-8")
+            qc = [
+                {"path": output, **check_generated_image(Path(output), width=request.width, height=request.height).__dict__}
+                for output in record.outputs
+            ]
+            (job_dir / "qc.json").write_text(json.dumps(qc, indent=2), encoding="utf-8")
+            if not all(item["passed"] for item in qc):
+                raise ValueError(f"Image QC failed: {qc}")
+            result = record.__dict__
         else:
             runner = JobRunner(client, args.jobs_dir)
             if args.command == "submit":

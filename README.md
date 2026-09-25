@@ -1,6 +1,6 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–2 are complete. Image generation models and production workflows are not installed yet.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–2 are complete; Phase 3 generation code is ready for a checkpoint and live validation. No image model is installed yet.**
 
 ## Current state
 
@@ -42,3 +42,16 @@ python controller.py resume JOB_ID
 Submitted workflows are saved under `jobs/<job_id>/` with a status checkpoint. Repeating the same workflow resumes a queued job or returns a completed job without queueing it again. These commands require a running ComfyUI server. No checkpoint model is bundled with this repository.
 
 To smoke-test the API without a model, submit `workflows/templates/api_smoke_empty_image.json`; it produces a 64×64 PNG.
+
+## Phase 3 generation
+
+The `generate` command uses the registered SDXL checkpoint and checks its commercial license record by default. It currently exits with `Model sdxl-base-1.0 is not installed`, because the checkpoint download requires separate approval under the project requirements. See the [research comparison](docs/model-research-2026-09-25.md) and [install plan](docs/model-install-plan.md).
+
+After the checkpoint is installed and verified, start ComfyUI, then run:
+
+```powershell
+cd D:\Stock_automation
+python controller.py generate --prompt "premium perfume bottle, studio product photography" --model-id sdxl-base-1.0 --seed 42
+```
+
+The controller freezes the API workflow in `jobs/<job_id>/workflow.json`, records the request and prompt, and writes deterministic image checks to `jobs/<job_id>/qc.json`. The current checks cover integrity, dimensions and blank output; they do not score artistic or photographic quality.

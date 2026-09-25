@@ -7,6 +7,13 @@
       "commercial_use": "allowed",
       "source": "https://github.com/Comfy-Org/ComfyUI/blob/88ab4a06566454ad89db8f0bedb970d6c08cd1b7/LICENSE",
       "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "sdxl-base-1.0",
+      "license": "CreativeML Open RAIL++-M",
+      "commercial_use": "allowed",
+      "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/462165984030d82259a11f4367a4eed129e94a7b/LICENSE.md",
+      "last_verified": "2026-09-25"
     }
   ]
 }

@@ -1,8 +1,10 @@
 import json
+import io
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
+from PIL import Image
 
 from ai_image_automation.comfyui.client import ComfyUIClient, ComfyUIError
 from ai_image_automation.cli import main
@@ -23,7 +25,11 @@ def fake_comfyui():
             elif self.path == "/history/abc":
                 body = {"abc": {"status": {"completed": True, "status_str": "success"}, "outputs": {"1": {"images": [{"filename": "result.png", "subfolder": "", "type": "output"}]}}}}
             elif self.path.startswith("/view?"):
-                data = b"PNG DATA"
+                image = Image.new("RGB", (64, 64), "white")
+                image.putpixel((0, 0), (0, 0, 0))
+                stream = io.BytesIO()
+                image.save(stream, format="PNG")
+                data = stream.getvalue()
                 self.send_response(200)
                 self.send_header("Content-Length", str(len(data)))
                 self.end_headers()
@@ -67,7 +73,8 @@ def test_health_queue_wait_and_download(fake_comfyui, tmp_path):
     history = client.wait_for_completion("abc", timeout_seconds=2, poll_seconds=0.01)
     paths = client.download_outputs(history, tmp_path)
     assert len(paths) == 1
-    assert paths[0].read_bytes() == b"PNG DATA"
+    with Image.open(paths[0]) as image:
+        assert image.size == (64, 64)
     assert calls[1][2]["prompt"]["1"]["class_type"] == "SaveImage"
 
 
@@ -93,3 +100,30 @@ def test_cli_submit_and_resume(fake_comfyui, tmp_path, capsys):
     assert result["status"] == "completed"
     assert main(["--url", url, "--jobs-dir", str(jobs_dir), "resume", result["job_id"]]) == 0
     assert sum(1 for call in calls if call[:2] == ("POST", "/prompt")) == 1
+
+
+def test_cli_generate_builds_workflow_and_runs_qc(fake_comfyui, tmp_path, capsys):
+    url, calls = fake_comfyui
+    checkpoint = tmp_path / "sdxl.safetensors"
+    checkpoint.write_bytes(b"test")
+    registry = tmp_path / "models.json"
+    registry.write_text(json.dumps({"schema_version": 1, "records": [{
+        "id": "sdxl-base-1.0", "name": "SDXL Base", "tasks": ["generate"],
+        "commercial_use": "allowed", "license": "OpenRAIL++", "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0",
+        "last_verified": "2026-09-25", "installed": True, "local_path": str(checkpoint)
+    }]}), encoding="utf-8")
+    license_registry = tmp_path / "licenses.json"
+    license_registry.write_text(json.dumps({"schema_version": 1, "records": [{
+        "resource_id": "sdxl-base-1.0", "license": "OpenRAIL++", "commercial_use": "allowed",
+        "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0",
+        "last_verified": "2026-09-25"
+    }]}), encoding="utf-8")
+    assert main(["--url", url, "--jobs-dir", str(tmp_path / "jobs"), "generate",
+                 "--prompt", "glass perfume", "--model-id", "sdxl-base-1.0",
+                 "--registry", str(registry), "--license-registry", str(license_registry),
+                 "--checkpoints-dir", str(tmp_path),
+                 "--width", "64", "--height", "64"]) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result["status"] == "completed"
+    assert calls[0][2]["prompt"]["2"]["inputs"]["text"] == "glass perfume"
+    assert (tmp_path / "jobs" / result["job_id"] / "qc.json").is_file()

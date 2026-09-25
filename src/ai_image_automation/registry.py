@@ -26,6 +26,7 @@ class ModelRecord(BaseModel):
     python: bool = False
     installed: bool = False
     local_path: str | None = None
+    sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     strengths: list[str] = Field(default_factory=list)
     weaknesses: list[str] = Field(default_factory=list)
     known_issues: list[str] = Field(default_factory=list)
