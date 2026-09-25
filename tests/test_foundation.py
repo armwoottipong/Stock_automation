@@ -84,7 +84,11 @@ def test_all_shipped_registries_validate():
     ]
     assert [record.id for record in tools] == ["comfyui", "ultimate-sd-upscale"]
     assert all(record.installed for record in tools)
-    assert ResearchCache.model_validate_json((data / "research_cache.json").read_text(encoding="utf-8")).entries == []
+    cached = ResearchCache.model_validate_json((data / "research_cache.json").read_text(encoding="utf-8")).entries
+    assert {(entry.task, entry.subject_type) for entry in cached} == {
+        ("remove_background", "opaque_isolate"), ("remove_background", "glass_isolate"),
+        ("remove_background", "translucent_isolate"), ("upscale", "pixel_2x"),
+    }
 
 
 def test_model_checksum_must_be_sha256():

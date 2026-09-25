@@ -1,13 +1,13 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–4 are complete. Generation and pixel/creative upscale have passed local smoke tests.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–7 are complete within their documented scope.**
 
 ## Current state
 
 - Windows 11 Pro; Python 3.12.6; RTX 4060 (8188 MiB), NVIDIA driver 591.86.
 - The active global Python has CPU-only PyTorch 2.10.0. ComfyUI uses a separate `.venv-comfyui` environment with CUDA-enabled PyTorch.
 - The initial inspection found no ComfyUI installation. An official ComfyUI 0.37.0 checkout is now in `vendor/ComfyUI`, excluded from this repository. Its revision and license are recorded in `data/`.
-- SDXL Base 1.0, RealESRGAN x2plus, and xinsir SDXL ControlNet Tile are installed locally and registered with source and license evidence. Background model registry remains empty.
+- SDXL Base 1.0, RealESRGAN x2plus, xinsir SDXL ControlNet Tile, BiRefNet DIS and BEN2 Base are installed locally and registered with source and license evidence.
 
 ## Phase 1 commands
 
@@ -20,7 +20,7 @@ python -c "from ai_image_automation.config import load_settings; print(load_sett
 
 `config/default.yaml` is the baseline configuration. `config/hardware_8gb.yaml` records the hardware profile. Settings are validated by Pydantic; registry files are validated by the models in `src/ai_image_automation/registry.py`. Runtime logs use JSON Lines.
 
-See [implementation plan](docs/implementation-plan.md) for the remaining phases. Background removal, routing, and batch rendering arrive in later phases.
+See [implementation plan](docs/implementation-plan.md) for the remaining phases. Routing and batch rendering arrive in later phases.
 
 The controller can also be operated from another coding agent or IDE; see [agent usage](docs/agent-usage.md) for workspace and Git worktree notes.
 
@@ -86,3 +86,13 @@ The [Phase 6 workflow](docs/phase-6-results.md) can cut out an opaque isolated o
 ```
 
 The command writes a transparent PNG and QC under `jobs/<job_id>/`. Glass and sheer subjects route to manual review without an automatic cutout. All results still require visual review for geometry, edge quality, original shadow/reflection and any text or branding before photostock submission.
+
+## Phase 7 research cache
+
+The [research cache](docs/phase-7-results.md) reuses reviewed model decisions without network requests during a job. It contains a provisional BiRefNet choice for opaque Isolate objects, manual routes for glass/sheer objects, and the tested 2× pixel upscaler. Check a decision with:
+
+```powershell
+python scripts\research_cache.py lookup --task remove_background --subject opaque_isolate
+```
+
+Expired or registry-invalid entries provide no usable model ID. Updating an entry requires a reviewed JSON record and matching registry/license verification dates.

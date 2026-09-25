@@ -1,1 +1,66 @@
-{"schema_version": 1, "entries": []}
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "task": "remove_background",
+      "subject_type": "glass_isolate",
+      "candidate_ids": ["birefnet-dis", "ben2-base"],
+      "sources": [
+        "https://huggingface.co/ZhengPeng7/BiRefNet/tree/6a62b7dcfa18a3829087877fb16c8006831e4220",
+        "https://huggingface.co/PramaLLC/BEN2/tree/19d0d22912541ae3178d10682640616c7287957b"
+      ],
+      "outcome": "manual_review",
+      "selected_model_id": null,
+      "benchmark_path": "docs/phase-5-results.md",
+      "summary": "Neither model yielded reliable clean transparency on the small isolated glass test.",
+      "verified_at": "2026-09-25",
+      "expires_at": "2026-10-25"
+    },
+    {
+      "task": "remove_background",
+      "subject_type": "opaque_isolate",
+      "candidate_ids": ["birefnet-dis", "ben2-base"],
+      "sources": [
+        "https://huggingface.co/ZhengPeng7/BiRefNet/tree/6a62b7dcfa18a3829087877fb16c8006831e4220",
+        "https://github.com/ZhengPeng7/BiRefNet/blob/main/LICENSE",
+        "https://huggingface.co/PramaLLC/BEN2/tree/19d0d22912541ae3178d10682640616c7287957b"
+      ],
+      "outcome": "selected",
+      "selected_model_id": "birefnet-dis",
+      "benchmark_path": "docs/phase-5-results.md",
+      "summary": "Provisional opaque-isolate choice on the RTX 4060; every cutout still needs visual stock review.",
+      "verified_at": "2026-09-25",
+      "expires_at": "2026-10-25"
+    },
+    {
+      "task": "remove_background",
+      "subject_type": "translucent_isolate",
+      "candidate_ids": ["birefnet-dis", "ben2-base"],
+      "sources": [
+        "https://huggingface.co/ZhengPeng7/BiRefNet/tree/6a62b7dcfa18a3829087877fb16c8006831e4220",
+        "https://huggingface.co/PramaLLC/BEN2/tree/19d0d22912541ae3178d10682640616c7287957b"
+      ],
+      "outcome": "manual_review",
+      "selected_model_id": null,
+      "benchmark_path": "docs/phase-5-results.md",
+      "summary": "Sheer organza had unvalidated opacity and source-background color; no automatic cutout.",
+      "verified_at": "2026-09-25",
+      "expires_at": "2026-10-25"
+    },
+    {
+      "task": "upscale",
+      "subject_type": "pixel_2x",
+      "candidate_ids": ["realesrgan-x2plus"],
+      "sources": [
+        "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.2.1",
+        "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE"
+      ],
+      "outcome": "selected",
+      "selected_model_id": "realesrgan-x2plus",
+      "benchmark_path": "docs/phase-4-results.md",
+      "summary": "Functional 2x pixel upscale baseline; visual stock review still required.",
+      "verified_at": "2026-09-25",
+      "expires_at": "2026-10-25"
+    }
+  ]
+}

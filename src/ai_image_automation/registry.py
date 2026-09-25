@@ -1,7 +1,7 @@
 """Registry schema and conservative model eligibility filtering."""
 
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 from typing import Literal
 
@@ -100,10 +100,38 @@ class ResearchEntry(BaseModel):
     subject_type: str = Field(min_length=1)
     candidate_ids: list[str] = Field(default_factory=list)
     sources: list[str] = Field(default_factory=list)
+    outcome: Literal["selected", "manual_review", "no_selection"] = "no_selection"
+    selected_model_id: str | None = None
+    benchmark_path: str | None = None
+    summary: str = ""
     verified_at: date
     expires_at: date
+
+    @model_validator(mode="after")
+    def valid_decision(self) -> "ResearchEntry":
+        if not self.candidate_ids or len(set(self.candidate_ids)) != len(self.candidate_ids):
+            raise ValueError("research entry requires unique candidate_ids")
+        if not self.sources or any(not source.startswith("https://") for source in self.sources):
+            raise ValueError("research entry requires HTTPS source URLs")
+        if self.outcome == "selected":
+            if self.selected_model_id not in self.candidate_ids:
+                raise ValueError("selected_model_id must be one of candidate_ids")
+            if not self.benchmark_path:
+                raise ValueError("selected research entry requires benchmark_path")
+        elif self.selected_model_id is not None:
+            raise ValueError("non-selected outcome cannot have selected_model_id")
+        if self.expires_at < self.verified_at or self.expires_at > self.verified_at + timedelta(days=30):
+            raise ValueError("research entry expires_at must be within 30 days of verified_at")
+        return self
 
 
 class ResearchCache(BaseModel):
     schema_version: Literal[1] = 1
     entries: list[ResearchEntry] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def unique_keys(self) -> "ResearchCache":
+        keys = [(entry.task, entry.subject_type) for entry in self.entries]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate research cache key")
+        return self
