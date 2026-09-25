@@ -19,7 +19,7 @@
       "sha256": "9ab37426bf4de0567af6b5d21b16151357149139362e6e8992021b8ce356a154",
       "strengths": ["Publisher weights and documented Python inference", "MIT license", "Passed seven local benchmark categories without OOM", "Sharp opaque-object edges and clean removal of the tested floor reflection"],
       "weaknesses": ["Glass interior retained original background", "Sheer curtains retained window scene"],
-      "known_issues": ["1.584 GiB is peak PyTorch allocated VRAM, not total board usage", "Publisher Transformers loader is incompatible with installed Transformers 5.17; benchmark imports pinned local publisher source and loads safetensors directly", "Default selected for opaque subjects only after one-image-per-category benchmark; Phase 6 refinement and QC remain pending"],
+      "known_issues": ["1.584 GiB is peak PyTorch allocated VRAM, not total board usage", "Publisher Transformers loader is incompatible with installed Transformers 5.17; pinned local publisher source and safetensors are used directly", "Phase 6 opaque cutouts require manual geometry, edge, shadow/reflection and stock-content review; transparent subjects have no automatic path"],
       "last_verified": "2026-09-25"
     },
     {

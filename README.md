@@ -75,4 +75,14 @@ The initial product example reached 2048×2048 and passed structural QC in both 
 
 ## Phase 5 background research
 
-The [Phase 5 comparison](docs/phase-5-results.md) uses seven locally generated Isolate objects as its primary benchmark. BiRefNet is the provisional choice for opaque objects; glass and sheer fabric require a review path. The generated fixtures have simple gray studio backgrounds despite white prompts, so the generation stage still needs a white-background acceptance check. Background removal remains a Phase 6 implementation task.
+The [Phase 5 comparison](docs/phase-5-results.md) uses seven locally generated Isolate objects as its primary benchmark. BiRefNet is the provisional choice for opaque objects; glass and sheer fabric require a review path. The generated fixtures have simple gray studio backgrounds despite white prompts, so the generation stage still needs a white-background acceptance check.
+
+## Phase 6 background removal
+
+The [Phase 6 workflow](docs/phase-6-results.md) can cut out an opaque isolated object with the registered BiRefNet model. Run it from the repository root with the CUDA Python environment:
+
+```powershell
+.\.venv-comfyui\Scripts\python.exe scripts\remove_background.py --input path\to\object.png --subject opaque
+```
+
+The command writes a transparent PNG and QC under `jobs/<job_id>/`. Glass and sheer subjects route to manual review without an automatic cutout. All results still require visual review for geometry, edge quality, original shadow/reflection and any text or branding before photostock submission.
