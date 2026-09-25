@@ -34,13 +34,21 @@ def test_workflow_injects_prompt_and_generation_parameters(tmp_path):
     workflow = build_sdxl_workflow(request, model)
     assert workflow["1"]["inputs"]["ckpt_name"] == "sdxl.safetensors"
     assert workflow["2"]["inputs"]["text"] == "glass perfume bottle"
-    assert workflow["3"]["inputs"]["text"] == "text, watermark"
+    assert workflow["3"]["inputs"]["text"].startswith("text, watermark, ")
+    assert "logo" in workflow["3"]["inputs"]["text"]
+    assert "brand mark" in workflow["3"]["inputs"]["text"]
     assert workflow["5"]["inputs"]["seed"] == 123
     assert workflow["5"]["inputs"]["sampler_name"] == "euler"
     assert workflow["5"]["inputs"]["scheduler"] == "simple"
     assert workflow["5"]["inputs"]["steps"] == 26
     assert workflow["5"]["inputs"]["cfg"] == 5.0
     assert workflow["4"]["inputs"]["width"] == 1024
+
+
+def test_stock_negative_prompt_applies_when_request_has_no_extra_terms(tmp_path):
+    workflow = build_sdxl_workflow(GenerationRequest(prompt="plain ceramic mug"), installed_model(tmp_path))
+    assert "logo" in workflow["3"]["inputs"]["text"]
+    assert "watermark" in workflow["3"]["inputs"]["text"]
 
 
 def test_commercial_generation_excludes_unverified_model(tmp_path):

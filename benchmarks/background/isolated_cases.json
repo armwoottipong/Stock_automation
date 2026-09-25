@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "policy": "clean_cutout_remove_original_shadow_and_floor_reflection",
+  "cases": [
+    {
+      "id": "isolate_fur_object_02",
+      "category": "fur_object",
+      "input": "input/isolate_fur_object_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        132.5,
+        129.9,
+        129.5
+      ],
+      "corner_stddev_rgb": [
+        3.3,
+        3.2,
+        3.2
+      ],
+      "near_white_corner": false,
+      "seed": 511
+    },
+    {
+      "id": "isolate_product_solid_02",
+      "category": "product_solid",
+      "input": "input/isolate_product_solid_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        83.6,
+        82.0,
+        79.6
+      ],
+      "corner_stddev_rgb": [
+        4.9,
+        4.7,
+        5.4
+      ],
+      "near_white_corner": false,
+      "seed": 512
+    },
+    {
+      "id": "isolate_glass_02",
+      "category": "glass",
+      "input": "input/isolate_glass_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        126.0,
+        125.1,
+        123.5
+      ],
+      "corner_stddev_rgb": [
+        4.1,
+        4.1,
+        4.0
+      ],
+      "near_white_corner": false,
+      "seed": 513
+    },
+    {
+      "id": "isolate_translucent_02",
+      "category": "translucent",
+      "input": "input/isolate_translucent_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        147.8,
+        147.5,
+        146.6
+      ],
+      "corner_stddev_rgb": [
+        3.6,
+        4.1,
+        4.0
+      ],
+      "near_white_corner": false,
+      "seed": 514
+    },
+    {
+      "id": "isolate_furniture_02",
+      "category": "furniture",
+      "input": "input/isolate_furniture_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        167.5,
+        165.9,
+        163.0
+      ],
+      "corner_stddev_rgb": [
+        6.4,
+        6.1,
+        6.5
+      ],
+      "near_white_corner": false,
+      "seed": 515
+    },
+    {
+      "id": "isolate_thin_structure_02",
+      "category": "thin_structure",
+      "input": "input/isolate_thin_structure_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        159.1,
+        158.0,
+        160.4
+      ],
+      "corner_stddev_rgb": [
+        3.9,
+        4.0,
+        3.2
+      ],
+      "near_white_corner": false,
+      "seed": 516
+    },
+    {
+      "id": "isolate_complex_shadow_02",
+      "category": "complex_shadow",
+      "input": "input/isolate_complex_shadow_02.png",
+      "source": "local SDXL generation from isolated_generation.json",
+      "license": "CreativeML Open RAIL++-M source checkpoint",
+      "author": "local SDXL workflow",
+      "requested_background": "white",
+      "corner_mean_rgb": [
+        136.5,
+        135.4,
+        131.5
+      ],
+      "corner_stddev_rgb": [
+        2.6,
+        2.7,
+        2.5
+      ],
+      "near_white_corner": false,
+      "seed": 517
+    }
+  ]
+}

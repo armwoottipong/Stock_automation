@@ -35,6 +35,27 @@
       "commercial_use": "allowed",
       "source": "https://github.com/ssitu/ComfyUI_UltimateSDUpscale/blob/a5547db9e1d07d3318bb21e9e9c474f4c1e9c8df/LICENSE",
       "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "birefnet-dis",
+      "license": "MIT",
+      "commercial_use": "allowed",
+      "source": "https://github.com/ZhengPeng7/BiRefNet/blob/main/LICENSE",
+      "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "ben2-base",
+      "license": "MIT",
+      "commercial_use": "allowed",
+      "source": "https://github.com/PramaLLC/BEN2/blob/main/LICENSE",
+      "last_verified": "2026-09-25"
+    },
+    {
+      "resource_id": "bria-rmbg-2.0",
+      "license": "CC BY-NC 4.0; separate commercial agreement required",
+      "commercial_use": "restricted",
+      "source": "https://huggingface.co/briaai/RMBG-2.0",
+      "last_verified": "2026-09-25"
     }
   ]
 }

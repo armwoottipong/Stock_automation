@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ai_image_automation.config import ROOT
+from ai_image_automation.quality.stock_policy import with_stock_negative_prompt
 from ai_image_automation.registry import LicenseRegistry, ModelRecord, Registry
 
 
@@ -64,7 +65,7 @@ def build_sdxl_workflow(request: GenerationRequest, model: ModelRecord) -> dict[
     workflow: dict[str, Any] = json.loads(template.read_text(encoding="utf-8"))
     workflow["1"]["inputs"]["ckpt_name"] = Path(model.local_path or "").name
     workflow["2"]["inputs"]["text"] = request.prompt
-    workflow["3"]["inputs"]["text"] = request.negative_prompt
+    workflow["3"]["inputs"]["text"] = with_stock_negative_prompt(request.negative_prompt)
     workflow["4"]["inputs"].update(width=request.width, height=request.height)
     workflow["5"]["inputs"].update(
         seed=request.seed, steps=request.steps, cfg=request.cfg,

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "checkpoint_id": "sdxl-base-1.0",
+  "width": 1024,
+  "height": 1024,
+  "steps": 26,
+  "cfg": 5.0,
+  "sampler_name": "dpmpp_2m",
+  "scheduler": "karras",
+  "negative_prompt": "busy background, room, landscape, scenery, pattern, gradient backdrop, props, extra objects, person, hands, face, text, letters, numbers, logo, trademark, brand mark, watermark, label, cropped object, duplicate subject",
+  "cases": [
+    {
+      "id": "isolate_fur_object_02",
+      "category": "fur_object",
+      "background": "white",
+      "seed": 511,
+      "prompt": "One small unbranded fluffy plush teddy bear with fine fur fibers, complete head and body visible with generous white margins, centered product catalog photograph, plain pure white seamless background, clean even high-key studio lighting, no props, isolated object"
+    },
+    {
+      "id": "isolate_product_solid_02",
+      "category": "product_solid",
+      "background": "white",
+      "seed": 512,
+      "prompt": "One plain unbranded matte blue ceramic mug with a curved handle, whole object centered with generous white margins, simple product catalog photograph, pure white seamless background, even diffuse studio lighting, no props, isolated product"
+    },
+    {
+      "id": "isolate_glass_02",
+      "category": "glass",
+      "background": "white",
+      "seed": 513,
+      "prompt": "One empty unbranded clear transparent drinking glass with visible thin rim and base, whole object centered with generous white margins, catalog product photograph, pure white seamless background, soft diffuse light, no props, isolated glass object"
+    },
+    {
+      "id": "isolate_translucent_02",
+      "category": "translucent",
+      "background": "white",
+      "seed": 514,
+      "prompt": "One sheer translucent pale pink organza ribbon bow as a craft supply, no wearer, delicate see-through fabric, whole bow centered with generous white margins, catalog product photograph, pure white seamless background, even diffuse studio lighting, isolated object"
+    },
+    {
+      "id": "isolate_furniture_02",
+      "category": "furniture",
+      "background": "white",
+      "seed": 515,
+      "prompt": "One unbranded complete wooden dining chair, front three-quarter view, four legs and open spaces clearly visible, centered with generous white margins, catalog photograph, pure white seamless background, even diffuse studio lighting, no room, isolated object"
+    },
+    {
+      "id": "isolate_thin_structure_02",
+      "category": "thin_structure",
+      "background": "white",
+      "seed": 516,
+      "prompt": "One small unbranded complete bicycle side view, thin frame and fine wheel spokes clearly visible, entire bicycle inside frame with wide white margins on every side, centered catalog photograph, pure white seamless background, even diffuse lighting, no rider, no props, isolated object"
+    },
+    {
+      "id": "isolate_complex_shadow_02",
+      "category": "complex_shadow",
+      "background": "white",
+      "seed": 517,
+      "prompt": "One plain unlabeled unbranded amber glass perfume bottle, whole object centered with generous white margins on glossy white floor with visible cast shadow and floor reflection, pure white seamless studio background, catalog product photograph, no props, isolated object"
+    }
+  ]
+}

@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from scipy.ndimage import uniform_filter
 
 from ai_image_automation.config import ROOT
+from ai_image_automation.quality.stock_policy import with_stock_negative_prompt
 from ai_image_automation.comfyui.client import ComfyUIError
 from ai_image_automation.registry import LicenseRegistry, ModelRecord, Registry
 
@@ -168,7 +169,7 @@ def build_creative_workflow(
     workflow["2"]["inputs"]["image"] = guide_name
     workflow["3"]["inputs"]["ckpt_name"] = checkpoint_name
     workflow["4"]["inputs"]["text"] = request.prompt
-    workflow["5"]["inputs"]["text"] = request.negative_prompt
+    workflow["5"]["inputs"]["text"] = with_stock_negative_prompt(request.negative_prompt)
     workflow["6"]["inputs"]["control_net_name"] = controlnet_name
     workflow["7"]["inputs"].update(strength=request.control_weight, end_percent=request.control_end)
     workflow["8"]["inputs"].update(

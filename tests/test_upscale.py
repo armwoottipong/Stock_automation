@@ -90,6 +90,7 @@ def test_creative_workflow_injects_controlnet_and_tile_parameters(tmp_path):
     )
     assert workflow["1"]["inputs"]["image"] == "source.png"
     assert workflow["2"]["inputs"]["image"] == "guided.png"
+    assert "logo" in workflow["5"]["inputs"]["text"]
     assert workflow["6"]["inputs"]["control_net_name"] == "tile.safetensors"
     assert workflow["7"]["inputs"]["strength"] == 0.88
     assert workflow["7"]["inputs"]["end_percent"] == 0.75

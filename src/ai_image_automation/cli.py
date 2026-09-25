@@ -13,6 +13,7 @@ from ai_image_automation.config import ROOT, load_settings
 from ai_image_automation.generation import GenerationRequest, build_sdxl_workflow, resolve_checkpoint
 from ai_image_automation.jobs.runner import JobRunner
 from ai_image_automation.quality.image_qc import check_generated_image
+from ai_image_automation.quality.stock_policy import STOCK_REVIEW_CHECKS
 from ai_image_automation.registry import LicenseRegistry, load_registry
 from ai_image_automation.upscale import (
     CreativeUpscaleRequest, UpscaleRequest, build_creative_workflow, build_pixel_workflow,
@@ -130,7 +131,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             }, indent=2), encoding="utf-8")
             (job_dir / "prompt.txt").write_text(request.prompt + "\n", encoding="utf-8")
             qc = [
-                {"path": output, **check_generated_image(Path(output), width=width, height=height).__dict__}
+                {"path": output, **check_generated_image(Path(output), width=width, height=height).__dict__,
+                 "stock_review_required": list(STOCK_REVIEW_CHECKS)}
                 for output in record.outputs
             ]
             (job_dir / "qc.json").write_text(json.dumps(qc, indent=2), encoding="utf-8")
@@ -160,7 +162,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "model_id": model.id, "commercial": not args.noncommercial,
             }, indent=2), encoding="utf-8")
             qc = [
-                {"path": output, **check_generated_image(Path(output), width=width * request.scale, height=height * request.scale).__dict__}
+                {"path": output, **check_generated_image(Path(output), width=width * request.scale, height=height * request.scale).__dict__,
+                 "stock_review_required": list(STOCK_REVIEW_CHECKS)}
                 for output in record.outputs
             ]
             (job_dir / "qc.json").write_text(json.dumps(qc, indent=2), encoding="utf-8")
@@ -193,7 +196,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             (job_dir / "prompt.txt").write_text(request.prompt + "\n", encoding="utf-8")
             qc = [
-                {"path": output, **check_generated_image(Path(output), width=request.width, height=request.height).__dict__}
+                {"path": output, **check_generated_image(Path(output), width=request.width, height=request.height).__dict__,
+                 "stock_review_required": list(STOCK_REVIEW_CHECKS)}
                 for output in record.outputs
             ]
             (job_dir / "qc.json").write_text(json.dumps(qc, indent=2), encoding="utf-8")

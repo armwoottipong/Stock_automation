@@ -6,4 +6,6 @@
 - Do not select a background removal default until the Phase 5 comparison and small benchmark are complete. Treat BiRefNet as one candidate only.
 - Do not download models or install custom nodes without checking source, license, compatibility, disk space, and provenance. Record any installation in the registry.
 - Preserve subject geometry when cutting out backgrounds. Default background policy is clean cutout, including original shadow and floor reflection removal.
+- Stock outputs must not contain visible text, logos, trademarks or branding. Reject or regenerate suspect images; prompt exclusions and structural QC alone do not clear this review.
+- Reusable project skill guides for tested workflows are in `.agents/skills/`; keep their scope aligned with completed phases.
 - Validate configuration, keep structured logs free of secrets, and run tests after each phase.

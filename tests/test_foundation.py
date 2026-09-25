@@ -69,11 +69,18 @@ def test_all_shipped_registries_validate():
     assert [record.id for record in upscalers] == ["realesrgan-x2plus"]
     assert [record.id for record in controlnets] == ["xinsir-tile-sdxl-1.0"]
     assert upscalers[0].installed and controlnets[0].installed
-    assert load_registry(data / "background_registry.json").records == []
+    backgrounds = load_registry(data / "background_registry.json")
+    assert [record.id for record in backgrounds.eligible("remove_background", commercial=True)] == [
+        "birefnet-dis", "ben2-base",
+    ]
+    assert all(record.installed and record.sha256 for record in backgrounds.eligible("remove_background", commercial=True))
+    assert backgrounds.records[-1].id == "bria-rmbg-2.0"
+    assert backgrounds.records[-1].commercial_use == "restricted"
     licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records
     tools = ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records
     assert [record.resource_id for record in licenses] == [
         "comfyui", "sdxl-base-1.0", "realesrgan-x2plus", "xinsir-tile-sdxl-1.0", "ultimate-sd-upscale",
+        "birefnet-dis", "ben2-base", "bria-rmbg-2.0",
     ]
     assert [record.id for record in tools] == ["comfyui", "ultimate-sd-upscale"]
     assert all(record.installed for record in tools)

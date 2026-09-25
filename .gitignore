@@ -11,6 +11,8 @@ jobs/*
 logs/*
 workflows/generated/*
 vendor/
+benchmarks/background/input/
+benchmarks/background/output/
 !input/.gitkeep
 !output/.gitkeep
 !jobs/.gitkeep
