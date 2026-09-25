@@ -64,8 +64,11 @@ def test_all_shipped_registries_validate():
     model_records = load_registry(data / "model_registry.json").records
     assert [record.id for record in model_records] == ["sdxl-base-1.0"]
     assert model_records[0].installed is True
-    assert [record.id for record in load_registry(data / "upscaler_registry.json").records] == ["realesrgan-x2plus"]
-    assert [record.id for record in load_registry(data / "controlnet_registry.json").records] == ["xinsir-tile-sdxl-1.0"]
+    upscalers = load_registry(data / "upscaler_registry.json").records
+    controlnets = load_registry(data / "controlnet_registry.json").records
+    assert [record.id for record in upscalers] == ["realesrgan-x2plus"]
+    assert [record.id for record in controlnets] == ["xinsir-tile-sdxl-1.0"]
+    assert upscalers[0].installed and controlnets[0].installed
     assert load_registry(data / "background_registry.json").records == []
     licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records
     tools = ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records

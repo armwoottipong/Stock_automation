@@ -14,12 +14,12 @@
       "source": "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.2.1",
       "comfyui": true,
       "python": true,
-      "installed": false,
+      "installed": true,
       "local_path": "vendor/ComfyUI/models/upscale_models/RealESRGAN_x2plus.pth",
-      "sha256": null,
+      "sha256": "49fafd45f8fd7aa8d31ab2a22d14d91b536c34494a5cfe31eb5d89c2fa266abb",
       "strengths": ["Official 2x general-image model", "Small model file"],
       "weaknesses": ["Not tailored to portrait or architecture", "May change text and fine detail"],
-      "known_issues": ["8 GB VRAM fit and output quality await live test"],
+      "known_issues": ["One 1024-to-2048 product-image run passed in 2.93 seconds", "Upscaling did not make generated label text legible", "Portrait and architecture quality remain untested"],
       "last_verified": "2026-09-25"
     }
   ]
