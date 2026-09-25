@@ -1,6 +1,6 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–7 are complete within their documented scope.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–8 are complete within their documented scope.**
 
 ## Current state
 
@@ -96,3 +96,14 @@ python scripts\research_cache.py lookup --task remove_background --subject opaqu
 ```
 
 Expired or registry-invalid entries provide no usable model ID. Updating an entry requires a reviewed JSON record and matching registry/license verification dates.
+
+## Phase 8 job router
+
+The [router](docs/phase-8-results.md) accepts a structured JSON request, selects a reviewed workflow, and freezes model, input and prompt settings before execution:
+
+```powershell
+python scripts\router.py plan --request path\to\request.json
+python scripts\router.py run --plan jobs\PLAN_ID\plan.json
+```
+
+Supported operations are isolated-object generation, pixel 2× upscale, creative product upscale and background removal. Transparent subjects route to manual review. An execution result marked `completed_requires_review` is still subject to visual stock checks.

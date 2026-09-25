@@ -9,4 +9,6 @@ STOCK_REVIEW_CHECKS = ("visible_text", "logo", "branding")
 
 def with_stock_negative_prompt(extra: str) -> str:
     extra = extra.strip()
+    if STOCK_NEGATIVE_PROMPT in extra:
+        return extra
     return f"{extra}, {STOCK_NEGATIVE_PROMPT}" if extra else STOCK_NEGATIVE_PROMPT

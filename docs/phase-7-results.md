@@ -6,7 +6,7 @@
 
 Every entry has unique candidate IDs, HTTPS evidence links, a reviewed outcome, verification date and expiry date. Validity is limited to 30 days, inclusive. A selected model also needs a local benchmark document, an installed eligible model record, matching official model/license sources in the entry, and matching verification dates in the model and license registries. Missing, expired or invalid entries return **no usable model ID**. The cache never upgrades a model's commercial eligibility by itself.
 
-The seeded records reuse completed project research: BiRefNet DIS for opaque Isolate cutouts, manual review for glass and sheer cutouts, and RealESRGAN x2plus for pixel 2×. They were verified on 2026-09-25 and expire after 2026-10-25. These are narrow decisions; they do not certify photostock quality or supply a transparent-object default.
+The seeded records reuse completed project research: SDXL for Isolate generation, xinsir ControlNet for creative upscale, BiRefNet DIS for opaque Isolate cutouts, manual review for glass and sheer cutouts, and RealESRGAN x2plus for pixel 2×. They were verified on 2026-09-25 and expire after 2026-10-25. These are narrow functional decisions; they do not certify photostock quality or supply a transparent-object default.
 
 ## Commands
 
@@ -21,4 +21,4 @@ python scripts\research_cache.py upsert --entry path\to\reviewed-entry.json
 
 ## Verification and limits
 
-Local tests cover fresh, missing, expired, changed-license and duplicate-key cases, plus updates that preserve other entries. CLI smoke lookup and list returned the four expected decisions. This phase implements cache maintenance only; the Phase 8 router has not yet been built. Existing Phase 3–6 commands still use their own registry checks and do not silently change model choices from this cache.
+Local tests cover fresh, missing, expired, changed-license and duplicate-key cases, plus updates that preserve other entries. CLI smoke lookup and list returned the reviewed decisions. This phase implements cache maintenance only; existing Phase 3–6 commands still use their own registry checks and do not silently change model choices from this cache.

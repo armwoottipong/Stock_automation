@@ -2,6 +2,36 @@
   "schema_version": 1,
   "entries": [
     {
+      "task": "creative_upscale",
+      "subject_type": "product_refine",
+      "candidate_ids": ["xinsir-tile-sdxl-1.0"],
+      "sources": [
+        "https://huggingface.co/xinsir/controlnet-tile-sdxl-1.0/tree/1ae8d9529efe58f7362a987363ff86a7904dc84f",
+        "https://huggingface.co/xinsir/controlnet-tile-sdxl-1.0"
+      ],
+      "outcome": "selected",
+      "selected_model_id": "xinsir-tile-sdxl-1.0",
+      "benchmark_path": "docs/phase-4-results.md",
+      "summary": "Functional creative tile upscale component; source contours and reflections can change.",
+      "verified_at": "2026-09-25",
+      "expires_at": "2026-10-25"
+    },
+    {
+      "task": "generate",
+      "subject_type": "isolated_object",
+      "candidate_ids": ["sdxl-base-1.0"],
+      "sources": [
+        "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/tree/462165984030d82259a11f4367a4eed129e94a7b",
+        "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/462165984030d82259a11f4367a4eed129e94a7b/LICENSE.md"
+      ],
+      "outcome": "selected",
+      "selected_model_id": "sdxl-base-1.0",
+      "benchmark_path": "docs/phase-5-results.md",
+      "summary": "Functional Isolate generation baseline; white prompts made gray gradients and stock review remains required.",
+      "verified_at": "2026-09-25",
+      "expires_at": "2026-10-25"
+    },
+    {
       "task": "remove_background",
       "subject_type": "glass_isolate",
       "candidate_ids": ["birefnet-dis", "ben2-base"],

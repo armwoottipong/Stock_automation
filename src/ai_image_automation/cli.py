@@ -77,6 +77,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     creative.add_argument("--seam-mask-blur", type=int, default=16)
     creative.add_argument("--steps", type=int, default=26)
     creative.add_argument("--cfg", type=float, default=5.0)
+    creative.add_argument("--sampler-name", default="dpmpp_2m")
+    creative.add_argument("--scheduler", default="karras")
     creative.add_argument("--seed", type=int, default=0)
     creative.add_argument("--noncommercial", action="store_true")
     args = parser.parse_args(argv)
@@ -92,6 +94,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 control_weight=args.control_weight, control_end=args.control_end,
                 seam_denoise=args.seam_denoise, seam_mask_blur=args.seam_mask_blur,
                 steps=args.steps, cfg=args.cfg, seed=args.seed,
+                sampler_name=args.sampler_name, scheduler=args.scheduler,
             )
             licenses = LicenseRegistry.model_validate_json(args.license_registry.read_text(encoding="utf-8"))
             checkpoint = resolve_checkpoint(
