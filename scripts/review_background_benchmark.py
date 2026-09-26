@@ -50,7 +50,7 @@ def main() -> None:
             label = ("source", *MODELS)[col]
             draw.text((col * CELL[0] + 8, row * CELL[1] + 5), f"{case['id']} / {label}", fill="black")
     group = "isolated" if args.manifest == "isolated_cases.json" else "scene"
-    destination = BENCHMARK / "output" / group / ("comparison-" + "-".join(case["id"] for case in selected) + ".png")
+    destination = BENCHMARK / "output" / "comparisons" / group / ("comparison-" + "-".join(case["id"] for case in selected) + ".png")
     destination.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(destination)
     print(destination)

@@ -32,7 +32,7 @@ def main() -> None:
                 sheet.paste(preview, (x, y))
             draw.text((col * tile + 8, row * (tile + label_height) + tile + 8),
                       f"{case['id']} | {model}", fill="black")
-    destination = run_dir / "output" / "contact_sheet.jpg"
+    destination = run_dir / "output" / "comparisons" / "contact_sheet.jpg"
     destination.parent.mkdir(parents=True, exist_ok=True)
     sheet.save(destination, quality=92)
     print(destination)

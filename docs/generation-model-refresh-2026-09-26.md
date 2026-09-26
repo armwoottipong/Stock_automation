@@ -37,7 +37,7 @@ Use the frozen cases under `benchmarks/generation/2026-09-26/cases.json`: fruit 
 
 ## Local result and selection
 
-The four fixed 1024 × 1024 cases completed for both models on the RTX 4060 under ComfyUI `--lowvram`. The ignored local images and JSON metrics are under `benchmarks/generation/2026-09-26/output/`; `contact_sheet.jpg` pairs each case. Board VRAM includes other desktop processes and is not a per-model allocation. The first row for each model includes loading time; subsequent rows reuse loaded weights.
+The four fixed 1024 × 1024 cases completed for both models on the RTX 4060 under ComfyUI `--lowvram`. The ignored local images and JSON metrics are under `benchmarks/generation/2026-09-26/output/<model-id>/`; `output/comparisons/contact_sheet.jpg` pairs each case. Board VRAM includes other desktop processes and is not a per-model allocation. The first row for each model includes loading time; subsequent rows reuse loaded weights.
 
 | Model | Completed | Runtime per image | Peak board VRAM | Mean RGB of four corners | Full-size review of brief |
 | --- | ---: | ---: | ---: | --- | --- |
