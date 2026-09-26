@@ -163,6 +163,7 @@ def _load_state(batch_dir: Path, item_id: str, plan_id: str) -> dict:
         "id": item_id, "plan_id": plan_id, "status": "pending", "attempts": 0,
         "total_attempts": 0, "outputs": [], "error_code": None,
         "error_type": None, "retryable": False,
+        "duration_seconds": 0.0, "output_bytes": 0,
     }
 
 
@@ -175,6 +176,18 @@ def batch_report(plan: dict, batch_dir: Path) -> dict:
     return {
         "batch_id": plan["batch_id"], "total": len(items), "counts": counts,
         "finished": finished, "progress_percent": round(100 * finished / len(items), 1),
+        "metrics": {
+            "total_attempts": sum(item.get("total_attempts", item["attempts"]) for item in items),
+            "execution_seconds": (
+                round(sum(item["duration_seconds"] for item in items), 3)
+                if all("duration_seconds" in item for item in items) else None
+            ),
+            "output_bytes": sum(
+                item.get("output_bytes", sum(
+                    Path(output).stat().st_size for output in item.get("outputs", []) if Path(output).is_file()
+                )) for item in items
+            ),
+        },
         "stock_review_required": plan["stock_review_required"],
         "items": items,
     }
@@ -221,7 +234,7 @@ def run_batch(
                 if state["attempts"] >= plan["max_attempts"]:
                     state.update(
                         status="failed", outputs=[], error_code="missing_completed_output",
-                        error_type=None, retryable=False,
+                        error_type=None, retryable=False, output_bytes=0,
                     )
                     report = _checkpoint(plan, batch_dir, state)
                     if on_progress:
@@ -251,6 +264,7 @@ def run_batch(
                 report = _checkpoint(plan, batch_dir, state)
                 if on_progress:
                     on_progress(report)
+                started = time.monotonic()
                 try:
                     result = execute(item["plan"], batch_dir, root)
                     if result["status"] not in ("completed_requires_review", "manual_review_required"):
@@ -262,6 +276,9 @@ def run_batch(
                     elif outputs:
                         raise ValueError("Manual review route unexpectedly produced output")
                 except Exception as exc:
+                    state["duration_seconds"] = round(
+                        state.get("duration_seconds", 0.0) + time.monotonic() - started, 3
+                    )
                     state["retryable"] = _retryable(exc)
                     state["error_code"] = (
                         "transient_execution_failure" if state["retryable"] else "plan_or_execution_failure"
@@ -278,9 +295,13 @@ def run_batch(
                         break
                     retry_delay(min(2 ** (state["attempts"] - 1), 4))
                     continue
+                state["duration_seconds"] = round(
+                    state.get("duration_seconds", 0.0) + time.monotonic() - started, 3
+                )
                 state.update(
                     status=result["status"], outputs=result.get("outputs", []),
                     error_code=None, error_type=None, retryable=False,
+                    output_bytes=sum(Path(output).stat().st_size for output in result.get("outputs", [])),
                 )
                 report = _checkpoint(plan, batch_dir, state)
                 if on_progress:

@@ -52,6 +52,8 @@ class JobRunner:
 
         if job_file.exists():
             record = JobRecord(**json.loads(job_file.read_text(encoding="utf-8")))
+            if record.job_id != job_id:
+                raise ValueError("Stored job ID does not match workflow")
             if not workflow_file.exists() or json.loads(workflow_file.read_text(encoding="utf-8")) != workflow:
                 raise ValueError(f"Workflow changed for existing job {job_id}")
         else:
@@ -60,11 +62,11 @@ class JobRunner:
             self._write_json(job_file, asdict(record))
 
         if record.status == "completed":
-            if all(Path(path).exists() for path in record.outputs):
+            if record.outputs and all(Path(path).is_file() for path in record.outputs):
                 return record
             raise ComfyUIError(f"Completed job {job_id} has missing output files")
         if record.status == "failed":
-            raise ComfyUIError(f"Job {job_id} previously failed: {record.error}")
+            raise ComfyUIError(f"Job {job_id} previously failed; inspect its checkpoint status")
 
         if record.prompt_id is None:
             record.prompt_id = self.client.queue_workflow(workflow)
@@ -78,10 +80,17 @@ class JobRunner:
         except ComfyUIError as exc:
             if "Timed out" not in str(exc):
                 record.status = "failed"
-                record.error = str(exc)
+                record.error = "comfyui_execution_failure"
                 self._write_json(job_file, asdict(record))
-            logger.exception("job execution failed", extra={"job_id": job_id})
+            logger.error("job execution failed", extra={"job_id": job_id})
             raise
+
+        if not outputs or not all(path.is_file() for path in outputs):
+            record.status = "failed"
+            record.error = "missing_output_image"
+            self._write_json(job_file, asdict(record))
+            logger.error("job completed without output image", extra={"job_id": job_id})
+            raise ComfyUIError(f"Job {job_id} completed without output image")
 
         record.outputs = [str(path.resolve()) for path in outputs]
         record.status = "completed"
@@ -90,7 +99,7 @@ class JobRunner:
         return record
 
     def resume(self, job_id: str) -> JobRecord:
-        if not job_id or any(char not in "0123456789abcdef" for char in job_id):
+        if len(job_id) != 16 or any(char not in "0123456789abcdef" for char in job_id):
             raise ValueError("Invalid job_id")
         workflow_file = self.jobs_dir / job_id / "workflow.json"
         if not workflow_file.exists():

@@ -29,10 +29,9 @@ class ComfyUIClient:
             with urlopen(request, timeout=self.timeout_seconds) as response:
                 return response.read()
         except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")[:500]
-            raise ComfyUIError(f"ComfyUI HTTP {exc.code}: {detail}") from exc
+            raise ComfyUIError(f"ComfyUI HTTP {exc.code}") from exc
         except (URLError, TimeoutError, OSError) as exc:
-            raise ComfyUIError(f"Cannot connect to ComfyUI at {self.base_url}: {exc}") from exc
+            raise ComfyUIError("Cannot connect to ComfyUI") from exc
 
     def _json(self, path: str, payload: dict[str, Any] | None = None) -> dict[str, Any]:
         try:
@@ -50,7 +49,7 @@ class ComfyUIClient:
         result = self._json("/prompt", {"prompt": workflow})
         prompt_id = result.get("prompt_id")
         if not isinstance(prompt_id, str) or not prompt_id:
-            raise ComfyUIError(f"ComfyUI did not return prompt_id: {result}")
+            raise ComfyUIError("ComfyUI did not return prompt_id")
         return prompt_id
 
     def history(self, prompt_id: str) -> dict[str, Any]:
@@ -65,7 +64,7 @@ class ComfyUIClient:
             if isinstance(job, dict):
                 status = job.get("status", {})
                 if status.get("status_str") == "error":
-                    raise ComfyUIError(f"ComfyUI job {prompt_id} failed: {status}")
+                    raise ComfyUIError(f"ComfyUI job {prompt_id} failed")
                 if status.get("completed"):
                     return job
             time.sleep(poll_seconds)

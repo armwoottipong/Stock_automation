@@ -17,7 +17,7 @@ The supplied setup document is a requirements source. Its suggested model names 
 7. **Research cache (complete):** offline lookup and reviewed update, 30-day maximum validity, registry/license revalidation and seeded Phase 4/5 decisions. Stale or invalid entries return no usable model. See [Phase 7 results](phase-7-results.md).
 8. **Router (complete for structured requests):** validate task and subject, use fresh cache and registry decisions, build a stock-aware prompt, freeze model/input hashes and workflow settings, then execute only the saved plan. Transparent subjects route to manual review. See [Phase 8 results](phase-8-results.md).
 9. **Batch (complete):** one frozen plan per batch with every item decision captured, sequential execution, file-level checkpoint/resume, bounded transient retry, live progress and final report. See [Phase 9 results](phase-9-results.md).
-10. **Hardening:** integration tests, recovery, disk cleanup, metrics, documentation, security review.
+10. **Hardening (complete within local scope):** integration and resume tests, stricter completion checkpoints, stale temporary-file cleanup preview/apply, batch timing/output-size metrics, documentation and security review. See [Phase 10 results](phase-10-results.md).
 
 ## Phase gates
 

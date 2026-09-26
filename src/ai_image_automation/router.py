@@ -318,7 +318,12 @@ def run_plan(path: Path, *, root: Path, as_of: date | None = None) -> dict:
     if execution_file.exists():
         recorded = json.loads(execution_file.read_text(encoding="utf-8"))
         outputs = recorded.get("outputs", [])
-        if all(Path(output).is_file() for output in outputs):
+        if (recorded.get("plan_id") == plan["plan_id"]
+                and ((plan["route"] == "manual_review" and recorded.get("status") == "manual_review_required"
+                      and outputs == [])
+                     or (plan["route"] == "execute" and recorded.get("status") == "completed_requires_review"
+                         and isinstance(outputs, list) and bool(outputs)
+                         and all(isinstance(output, str) and Path(output).is_file() for output in outputs)))):
             return recorded
     command = _command(plan, root)
     if command is None:
@@ -326,11 +331,22 @@ def run_plan(path: Path, *, root: Path, as_of: date | None = None) -> dict:
     else:
         completed = subprocess.run(command, cwd=root, capture_output=True, text=True)
         if completed.returncode:
-            raise RuntimeError(f"Frozen job failed with exit code {completed.returncode}: {completed.stderr[-1000:]}")
+            detail = completed.stderr.lower()
+            if "out of memory" in detail:
+                category = "CUDA out of memory"
+            elif "timed out" in detail or "timeout" in detail:
+                category = "timed out"
+            elif "connection refused" in detail or "connection reset" in detail:
+                category = "connection unavailable"
+            else:
+                category = "execution failure"
+            raise RuntimeError(f"Frozen job failed with exit code {completed.returncode}: {category}")
         result = json.loads(completed.stdout)
         outputs = result.get("outputs") or ([result["output"]] if result.get("output") else [])
         if not outputs:
             raise RuntimeError("Frozen job returned no output images")
+        if not all(isinstance(output, str) and Path(output).is_file() for output in outputs):
+            raise RuntimeError("Frozen job returned missing output images")
         record = {
             "plan_id": plan["plan_id"], "status": "completed_requires_review", "outputs": outputs,
             "underlying_job_id": result.get("job_id"),

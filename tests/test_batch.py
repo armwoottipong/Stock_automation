@@ -61,6 +61,9 @@ def test_batch_checkpoints_each_file_and_resume_skips_completed(tmp_path: Path):
     assert first["progress_percent"] == 100.0
     assert first["counts"]["completed_requires_review"] == 1
     assert first["counts"]["manual_review_required"] == 1
+    assert first["metrics"]["total_attempts"] == 2
+    assert first["metrics"]["output_bytes"] == len(b"image")
+    assert first["metrics"]["execution_seconds"] >= 0
     assert len(calls) == 2
     assert run_batch(path, root=ROOT, execute=execute, retry_delay=lambda _: None) == first
     assert len(calls) == 2
@@ -86,6 +89,7 @@ def test_transient_failure_retries_only_one_file(tmp_path: Path):
     assert delays == [1]
     assert report["items"][0]["attempts"] == 2
     assert report["items"][0]["total_attempts"] == 2
+    assert report["metrics"]["total_attempts"] == 2
     assert report["items"][0]["status"] == "manual_review_required"
 
 
@@ -169,3 +173,14 @@ def test_duplicate_ids_rejected_before_planning():
         BatchManifest.model_validate({"items": [
             {"id": "same", "request": {}}, {"id": "same", "request": {}},
         ]})
+
+
+def test_batch_to_frozen_router_manual_review_integration(tmp_path: Path):
+    path = make_plan(tmp_path, subjects=("glass_isolate",))
+    first = run_batch(path, root=ROOT)
+    assert first["counts"]["manual_review_required"] == 1
+    assert first["metrics"]["total_attempts"] == 1
+    assert first["metrics"]["execution_seconds"] >= 0
+    assert run_batch(path, root=ROOT) == first
+    child = path.parent / "child_jobs" / first["items"][0]["plan_id"] / "execution.json"
+    assert json.loads(child.read_text(encoding="utf-8"))["status"] == "manual_review_required"

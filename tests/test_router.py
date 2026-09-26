@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 from datetime import date
 from pathlib import Path
 
@@ -60,6 +61,35 @@ def test_glass_plan_routes_to_review_without_inference(tmp_path: Path):
     record = run_plan(path, root=ROOT, as_of=AS_OF)
     assert record["status"] == "manual_review_required"
     assert record["outputs"] == []
+    execution_file = path.parent / "execution.json"
+    execution_file.write_text(json.dumps({"plan_id": "wrong", "status": "completed_requires_review", "outputs": []}), encoding="utf-8")
+    recovered = run_plan(path, root=ROOT, as_of=AS_OF)
+    assert recovered == record
+    assert json.loads(execution_file.read_text(encoding="utf-8")) == record
+
+
+def test_execution_failure_does_not_expose_subprocess_stderr(tmp_path: Path, monkeypatch):
+    source = tmp_path / "object.png"
+    Image.new("RGB", (96, 96), "white").save(source)
+    plan = build_plan(
+        parse_intent({"operation": "remove_background", "subject_type": "opaque_isolate", "input": str(source)}),
+        load_context(ROOT / "data"), as_of=AS_OF,
+    )
+    path = freeze_plan(plan, tmp_path / "jobs")
+    import ai_image_automation.router as router
+
+    original_hash = router.sha256_file
+    monkeypatch.setattr(router, "sha256_file", lambda target: (
+        plan["models"]["background"]["sha256"] if str(target).endswith("birefnet-dis/model.safetensors") or str(target).endswith("birefnet-dis\\model.safetensors")
+        else original_hash(target)
+    ))
+    monkeypatch.setattr(router, "_command", lambda *_: ["fake-worker"])
+    monkeypatch.setattr(router.subprocess, "run", lambda *_args, **_kwargs: SimpleNamespace(
+        returncode=1, stderr="secret-token prompt text: CUDA out of memory", stdout="",
+    ))
+    with pytest.raises(RuntimeError, match="CUDA out of memory") as exc:
+        run_plan(path, root=ROOT, as_of=AS_OF)
+    assert "secret-token" not in str(exc.value)
 
 
 def test_input_change_blocks_frozen_pixel_plan(tmp_path: Path):

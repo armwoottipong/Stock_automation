@@ -119,3 +119,15 @@ python scripts\batch.py status --plan jobs\batches\BATCH_ID\batch_plan.json
 ```
 
 Running the same plan again resumes pending work and skips completed files. Transient failures have bounded automatic retries; deterministic failures are recorded while later files continue. Every output still requires visual review for photostock.
+
+## Phase 10 hardening
+
+The [hardening results](docs/phase-10-results.md) cover checkpoint recovery, batch metrics, security review and an offline integration test. `report.json` now includes total attempts, execution seconds and output bytes. Execution seconds are `null` for batches created before these metrics were added.
+
+Inspect free disk space and stale atomic-write files without deleting anything:
+
+```powershell
+python scripts\maintenance.py
+```
+
+After checking the preview, `python scripts\maintenance.py --apply` removes only `*.tmp` files older than seven days within `jobs/`. It never removes image outputs, models, source images or batch checkpoints. Change the age with `--older-than-days N` (minimum 1). Keep human review in the stock submission workflow, especially for text, logos, trademarks, branding, object geometry and cutout edges.
