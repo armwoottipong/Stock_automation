@@ -8,6 +8,7 @@
       "category": ["upscaler", "pixel"],
       "tasks": ["upscale"],
       "vram_gb": null,
+      "native_scale": 2,
       "precision": ["fp32"],
       "commercial_use": "allowed",
       "license": "BSD-3-Clause",
@@ -21,6 +22,28 @@
       "weaknesses": ["Not tailored to portrait or architecture", "May change text and fine detail"],
       "known_issues": ["One 1024-to-2048 product-image run passed in 2.93 seconds", "Upscaling did not make generated label text legible", "Portrait and architecture quality remain untested"],
       "last_verified": "2026-09-25"
+    },
+    {
+      "id": "realesrgan-x4plus",
+      "name": "RealESRGAN x4plus",
+      "version": "v0.1.0",
+      "category": ["upscaler", "pixel"],
+      "tasks": ["upscale"],
+      "vram_gb": null,
+      "native_scale": 4,
+      "precision": ["fp32"],
+      "commercial_use": "allowed",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.1.0",
+      "comfyui": true,
+      "python": true,
+      "installed": true,
+      "local_path": "vendor/ComfyUI/models/upscale_models/RealESRGAN_x4plus.pth",
+      "sha256": "4fa0d38905f75ac06eb49a7951b426670021be3018265fd191d2125df9d682f1",
+      "strengths": ["Official 4x general-image checkpoint", "Single upscale pass", "Slightly cleaner fruit texture and edges than x2plus twice in a five-image local comparison"],
+      "weaknesses": ["Only five fruit images were compared visually", "Fine detail can be invented by super-resolution"],
+      "known_issues": ["Downloaded 2026-09-26 from official v0.1.0 release; 67040989 bytes", "Passed five local 4x jobs on RTX 4060 8 GB without OOM; peak VRAM was not measured", "Provisional default for isolated fruit; full-size stock review required"],
+      "last_verified": "2026-09-26"
     }
   ]
 }

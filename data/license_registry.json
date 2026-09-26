@@ -23,6 +23,13 @@
       "last_verified": "2026-09-25"
     },
     {
+      "resource_id": "realesrgan-x4plus",
+      "license": "BSD-3-Clause",
+      "commercial_use": "allowed",
+      "source": "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE",
+      "last_verified": "2026-09-26"
+    },
+    {
       "resource_id": "xinsir-tile-sdxl-1.0",
       "license": "Apache-2.0",
       "commercial_use": "allowed",

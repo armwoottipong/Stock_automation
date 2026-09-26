@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Annotated, Literal, Union
 
 from PIL import Image
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from ai_image_automation.background import sha256_file
 from ai_image_automation.generation import GenerationRequest
@@ -42,8 +42,17 @@ class GenerateIntent(StrictIntent):
 
 class PixelUpscaleIntent(StrictIntent):
     operation: Literal["upscale"]
-    subject_type: Literal["pixel_2x"] = "pixel_2x"
+    subject_type: Literal["pixel_2x", "pixel_4x"] | None = None
+    scale: Literal[2, 4] = 4
     input: Path
+
+    @model_validator(mode="after")
+    def match_scale(self) -> "PixelUpscaleIntent":
+        if self.subject_type is None:
+            self.subject_type = f"pixel_{self.scale}x"
+        if self.subject_type != f"pixel_{self.scale}x":
+            raise ValueError("subject_type and scale must match")
+        return self
 
 
 class CreativeUpscaleIntent(StrictIntent):
@@ -160,7 +169,7 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
             raise ValueError("No pixel upscaler selected")
         models["upscaler"] = _model_snapshot(context, model_id)
         input_info = _input_snapshot(intent.input)
-        request = {"input": input_info["path"], "scale": 2}
+        request = {"input": input_info["path"], "scale": intent.scale}
         workflow = "upscale_pixel"
     elif isinstance(intent, CreativeUpscaleIntent):
         checkpoint_evidence, checkpoint_id, _ = _research(context, "generate", "isolated_object", as_of=as_of)
@@ -262,7 +271,7 @@ def _command(plan: dict, root: Path) -> list[str] | None:
                 "--sampler-name", request["sampler_name"], "--scheduler", request["scheduler"]]
     if plan["workflow"] == "upscale_pixel":
         return [sys.executable, str(root / "controller.py"), "upscale", "--model-id", models["upscaler"]["id"],
-                "--input", request["input"]]
+                "--input", request["input"], "--scale", str(request["scale"])]
     if plan["workflow"] == "upscale_creative_sdxl":
         return [sys.executable, str(root / "controller.py"), "creative-upscale",
                 "--checkpoint-id", models["checkpoint"]["id"], "--controlnet-id", models["controlnet"]["id"],

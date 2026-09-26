@@ -24,7 +24,7 @@ class UpscaleRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     input: Path
-    scale: Literal[2] = 2
+    scale: Literal[2, 4] = 4
 
 
 class CreativeUpscaleRequest(BaseModel):
@@ -116,6 +116,8 @@ def resolve_upscaler(
         path = ROOT / path
     if not path.is_file():
         raise FileNotFoundError(path)
+    if model.sha256 and hashlib.sha256(path.read_bytes()).hexdigest() != model.sha256:
+        raise ValueError(f"Upscaler {model_id} checkpoint hash mismatch")
     return model
 
 
@@ -153,6 +155,14 @@ def build_pixel_workflow(request: UpscaleRequest, image_name: str, model: ModelR
     workflow: dict[str, Any] = json.loads(template.read_text(encoding="utf-8"))
     workflow["1"]["inputs"]["image"] = image_name
     workflow["2"]["inputs"]["model_name"] = Path(model.local_path or "").name
+    if model.native_scale not in (2, 4) or request.scale % model.native_scale:
+        raise ValueError("Requested scale is incompatible with the upscaler's native scale")
+    if request.scale == 4 and model.native_scale == 2:
+        workflow["5"] = {
+            "class_type": "ImageUpscaleWithModel",
+            "inputs": {"upscale_model": ["2", 0], "image": ["3", 0]},
+        }
+        workflow["4"]["inputs"]["images"] = ["5", 0]
     return workflow
 
 

@@ -48,9 +48,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     generate.add_argument("--sampler-name", default=settings.generation.sampler_name)
     generate.add_argument("--scheduler", default=settings.generation.scheduler)
     generate.add_argument("--seed", type=int, default=0)
-    upscale = commands.add_parser("upscale", help="Upscale an existing image 2× with a registered pixel model")
+    upscale = commands.add_parser("upscale", help="Upscale an existing image 4× by default with a registered pixel model")
     upscale.add_argument("--input", type=Path, required=True)
-    upscale.add_argument("--model-id", default="realesrgan-x2plus")
+    upscale.add_argument("--scale", type=int, choices=(2, 4), default=4)
+    upscale.add_argument("--model-id", default="realesrgan-x4plus")
     upscale.add_argument("--registry", type=Path, default=ROOT / "data" / "upscaler_registry.json")
     upscale.add_argument("--license-registry", type=Path, default=ROOT / "data" / "license_registry.json")
     upscale.add_argument("--models-dir", type=Path, default=ROOT / "vendor" / "ComfyUI" / "models" / "upscale_models")
@@ -143,7 +144,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError(f"Image QC failed: {qc}")
             result = record.__dict__
         elif args.command == "upscale":
-            request = UpscaleRequest(input=args.input)
+            request = UpscaleRequest(input=args.input, scale=args.scale)
             licenses = LicenseRegistry.model_validate_json(args.license_registry.read_text(encoding="utf-8"))
             model = resolve_upscaler(
                 load_registry(args.registry), args.model_id,

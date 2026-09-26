@@ -19,6 +19,8 @@ The supplied setup document is a requirements source. Its suggested model names 
 9. **Batch (complete):** one frozen plan per batch with every item decision captured, sequential execution, file-level checkpoint/resume, bounded transient retry, live progress and final report. See [Phase 9 results](phase-9-results.md).
 10. **Hardening (complete within local scope):** integration and resume tests, stricter completion checkpoints, stale temporary-file cleanup preview/apply, batch timing/output-size metrics, documentation and security review. See [Phase 10 results](phase-10-results.md).
 
+Current pixel upscale behavior after the completed phases: 4× is the default with provisional RealESRGAN x4plus selection for isolated fruit; explicit 2× remains available. See [4× evaluation](x4-upscale-evaluation-2026-09-26.md). This does not change the historical Phase 4 smoke-test scope.
+
 ## Phase gates
 
 Each phase requires tests and a smoke check before proceeding. Phase 2 must prove API health, queue, output retrieval, and resume. Phase 5 must finish before Phase 6 chooses a background model. Model and custom-node downloads require official provenance, license checks, and resource checks. The user has authorized installing necessary programs; this does not turn unverified models into approved production dependencies.

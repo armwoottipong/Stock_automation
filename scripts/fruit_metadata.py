@@ -41,7 +41,7 @@ DETAILS = {
 }
 
 
-def build_catalog(manifest: dict) -> dict:
+def build_catalog(manifest: dict, *, cutout_key: str = "cutout") -> dict:
     records = []
     for item in manifest["records"]:
         name = item["name"]
@@ -50,7 +50,7 @@ def build_catalog(manifest: dict) -> dict:
         keywords = [fruit, *detail, "fruit", "isolated", "transparent background", "cutout", "food", "produce"]
         keywords = list(dict.fromkeys(keywords))
         records.append({
-            "filename": Path(item["cutout"]).name,
+            "filename": Path(item[cutout_key]).name,
             "title": title,
             "keywords": keywords,
             "shutterstock_category": "Food and drink",
@@ -71,12 +71,16 @@ def build_catalog(manifest: dict) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path("output/fruit_isolates_2026-09-26"))
+    parser.add_argument("--manifest", default="manifest.json")
+    parser.add_argument("--metadata-dir", default="metadata")
+    parser.add_argument("--assets", default="cutout")
     args = parser.parse_args()
     root = args.root
-    manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
-    catalog = build_catalog(manifest)
-    csv_text = export_csv(catalog, "adobe", root / "cutout")
-    folder = root / "metadata"
+    manifest = json.loads((root / args.manifest).read_text(encoding="utf-8"))
+    catalog = build_catalog(manifest, cutout_key=args.assets)
+    catalog["scale_from_original"] = manifest.get("scale_from_original", 2)
+    csv_text = export_csv(catalog, "adobe", root / args.assets)
+    folder = root / args.metadata_dir
     folder.mkdir(exist_ok=True)
     (folder / "catalog.json").write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (folder / "adobe_stock_draft.csv").write_text(csv_text, encoding="utf-8", newline="")

@@ -66,7 +66,7 @@ def test_all_shipped_registries_validate():
     assert model_records[0].installed is True
     upscalers = load_registry(data / "upscaler_registry.json").records
     controlnets = load_registry(data / "controlnet_registry.json").records
-    assert [record.id for record in upscalers] == ["realesrgan-x2plus"]
+    assert [record.id for record in upscalers] == ["realesrgan-x2plus", "realesrgan-x4plus"]
     assert [record.id for record in controlnets] == ["xinsir-tile-sdxl-1.0"]
     assert upscalers[0].installed and controlnets[0].installed
     backgrounds = load_registry(data / "background_registry.json")
@@ -79,7 +79,7 @@ def test_all_shipped_registries_validate():
     licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records
     tools = ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records
     assert [record.resource_id for record in licenses] == [
-        "comfyui", "sdxl-base-1.0", "realesrgan-x2plus", "xinsir-tile-sdxl-1.0", "ultimate-sd-upscale",
+        "comfyui", "sdxl-base-1.0", "realesrgan-x2plus", "realesrgan-x4plus", "xinsir-tile-sdxl-1.0", "ultimate-sd-upscale",
         "birefnet-dis", "ben2-base", "bria-rmbg-2.0",
     ]
     assert [record.id for record in tools] == ["comfyui", "ultimate-sd-upscale"]
@@ -88,7 +88,7 @@ def test_all_shipped_registries_validate():
     assert {(entry.task, entry.subject_type) for entry in cached} == {
         ("creative_upscale", "product_refine"), ("generate", "isolated_object"),
         ("remove_background", "opaque_isolate"), ("remove_background", "glass_isolate"),
-        ("remove_background", "translucent_isolate"), ("upscale", "pixel_2x"),
+        ("remove_background", "translucent_isolate"), ("upscale", "pixel_2x"), ("upscale", "pixel_4x"),
     }
 
 

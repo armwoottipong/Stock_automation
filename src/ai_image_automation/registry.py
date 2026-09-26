@@ -18,6 +18,7 @@ class ModelRecord(BaseModel):
     category: list[str] = Field(default_factory=list)
     tasks: list[str] = Field(default_factory=list)
     vram_gb: float | None = Field(default=None, gt=0)
+    native_scale: Literal[2, 4] | None = None
     precision: list[str] = Field(default_factory=list)
     commercial_use: CommercialUse = "unclear"
     license: str = ""

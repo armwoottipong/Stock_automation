@@ -142,7 +142,7 @@ def test_cli_upscale_stages_input_and_runs_pixel_workflow(fake_comfyui, tmp_path
         "id": "realesrgan-x2plus", "name": "RealESRGAN x2plus", "tasks": ["upscale"],
         "commercial_use": "allowed", "license": "BSD-3-Clause",
         "source": "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.2.1",
-        "last_verified": "2026-09-25", "installed": True, "local_path": str(model)
+        "last_verified": "2026-09-25", "installed": True, "local_path": str(model), "native_scale": 2
     }]}), encoding="utf-8")
     licenses = tmp_path / "licenses.json"
     licenses.write_text(json.dumps({"schema_version": 1, "records": [{
@@ -151,7 +151,7 @@ def test_cli_upscale_stages_input_and_runs_pixel_workflow(fake_comfyui, tmp_path
         "source": "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE",
         "last_verified": "2026-09-25"
     }]}), encoding="utf-8")
-    args = ["--url", url, "--jobs-dir", str(tmp_path / "jobs"), "upscale",
+    args = ["--url", url, "--jobs-dir", str(tmp_path / "jobs"), "upscale", "--scale", "2", "--model-id", "realesrgan-x2plus",
             "--input", str(source), "--registry", str(registry),
             "--license-registry", str(licenses), "--models-dir", str(models_dir),
             "--comfy-input-dir", str(tmp_path / "comfy-input")]

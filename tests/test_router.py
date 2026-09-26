@@ -97,13 +97,25 @@ def test_input_change_blocks_frozen_pixel_plan(tmp_path: Path):
     Image.new("RGB", (96, 96), "white").save(source)
     plan = build_plan(
         parse_intent({"operation": "upscale", "input": str(source)}),
-        load_context(ROOT / "data"), as_of=AS_OF,
+        load_context(ROOT / "data"), as_of=date(2026, 9, 26),
     )
-    assert plan["models"]["upscaler"]["id"] == "realesrgan-x2plus"
+    assert plan["models"]["upscaler"]["id"] == "realesrgan-x4plus"
+    assert plan["request"]["scale"] == 4
     path = freeze_plan(plan, tmp_path / "jobs")
     Image.new("RGB", (96, 96), "black").save(source)
     with pytest.raises(ValueError, match="Input image changed"):
-        run_plan(path, root=ROOT, as_of=AS_OF)
+        run_plan(path, root=ROOT, as_of=date(2026, 9, 26))
+
+
+def test_explicit_2x_plan_keeps_legacy_model(tmp_path: Path):
+    source = tmp_path / "mug.png"
+    Image.new("RGB", (96, 96), "white").save(source)
+    intent = parse_intent({"operation": "upscale", "input": str(source), "scale": 2})
+    plan = build_plan(intent, load_context(ROOT / "data"), as_of=date(2026, 9, 26))
+    assert plan["subject_type"] == "pixel_2x"
+    assert plan["request"]["scale"] == 2
+    assert plan["models"]["upscaler"]["id"] == "realesrgan-x2plus"
+    assert _command(plan, ROOT)[-2:] == ["--scale", "2"]
 
 
 def test_creative_plan_carries_all_effective_parameters(tmp_path: Path):

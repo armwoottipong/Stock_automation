@@ -91,6 +91,22 @@
       "summary": "Functional 2x pixel upscale baseline; visual stock review still required.",
       "verified_at": "2026-09-25",
       "expires_at": "2026-10-25"
+    },
+    {
+      "task": "upscale",
+      "subject_type": "pixel_4x",
+      "candidate_ids": ["realesrgan-x2plus", "realesrgan-x4plus"],
+      "sources": [
+        "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.2.1",
+        "https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.1.0",
+        "https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE"
+      ],
+      "outcome": "selected",
+      "selected_model_id": "realesrgan-x4plus",
+      "benchmark_path": "docs/x4-upscale-evaluation-2026-09-26.md",
+      "summary": "Provisional 4x isolated-fruit default after five-image local comparison with x2plus twice; full-size stock review required.",
+      "verified_at": "2026-09-26",
+      "expires_at": "2026-10-26"
     }
   ]
 }

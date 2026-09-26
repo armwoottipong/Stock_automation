@@ -19,7 +19,7 @@ def model(tmp_path: Path) -> ModelRecord:
         id="realesrgan-x2plus", name="RealESRGAN x2plus", category=["upscaler"],
         tasks=["upscale"], commercial_use="allowed", license="BSD-3-Clause",
         source="https://github.com/xinntao/Real-ESRGAN/releases/tag/v0.2.1",
-        last_verified="2026-09-25", installed=True, local_path=str(path),
+        last_verified="2026-09-25", installed=True, local_path=str(path), native_scale=2,
     )
 
 
@@ -45,6 +45,21 @@ def test_pixel_workflow_uses_registered_model_and_staged_image(tmp_path):
     assert workflow["2"]["inputs"]["model_name"] == "RealESRGAN_x2plus.pth"
     assert workflow["3"]["class_type"] == "ImageUpscaleWithModel"
     assert workflow["4"]["class_type"] == "SaveImage"
+
+
+def test_pixel_4x_default_chains_two_x2_nodes_and_x4_model_uses_one(tmp_path):
+    request = UpscaleRequest(input=tmp_path / "source.png")
+    assert request.scale == 4
+    x2 = build_pixel_workflow(request, "source.png", model(tmp_path))
+    assert x2["5"]["inputs"]["image"] == ["3", 0]
+    assert x2["4"]["inputs"]["images"] == ["5", 0]
+    direct = model(tmp_path)
+    direct.native_scale = 4
+    x4 = build_pixel_workflow(request, "source.png", direct)
+    assert "5" not in x4
+    assert x4["4"]["inputs"]["images"] == ["3", 0]
+    with pytest.raises(ValueError, match="incompatible"):
+        build_pixel_workflow(UpscaleRequest(input=tmp_path / "source.png", scale=2), "source.png", direct)
 
 
 def test_upscaler_requires_matching_commercial_license_and_local_file(tmp_path):
