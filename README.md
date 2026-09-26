@@ -47,20 +47,20 @@ Submitted workflows are saved under `jobs/<job_id>/` with a status checkpoint. R
 
 To smoke-test the API without a model, submit `workflows/templates/api_smoke_empty_image.json`; it produces a 64×64 PNG.
 
-## Phase 3 generation
+## Generation
 
-The `generate` command uses the registered SDXL checkpoint and checks its commercial license record by default. The approved checkpoint is installed locally; see the [research comparison](docs/model-research-2026-09-25.md), [install record](docs/model-install-plan.md), and [Phase 3 results](docs/phase-3-results.md).
+The `generate` command now defaults to the registered FLUX.2 Klein 4B FP8 checkpoint, using its registered text encoder and VAE. It checks commercial license records before running. The [local four-case comparison](docs/generation-model-refresh-2026-09-26.md) selected it provisionally for isolated objects on white. SDXL remains available explicitly and powers the existing SDXL creative-upscale route.
 
 Start ComfyUI, then run:
 
 ```powershell
 cd D:\Stock_automation
-python controller.py generate --prompt "premium perfume bottle, studio product photography" --model-id sdxl-base-1.0 --seed 42
+python controller.py generate --prompt "one plain ripe red apple, isolated on a pure white background" --seed 42
 ```
 
 The controller freezes the API workflow in `jobs/<job_id>/workflow.json`, records the request and prompt, and writes deterministic image checks to `jobs/<job_id>/qc.json`. The current checks cover integrity, dimensions and blank output; they do not score artistic or photographic quality. QC also records a required manual review for visible text, logos and branding.
 
-Stock images must contain no visible text, logos, trademarks, labels or branding. Generation and creative upscale add these to the negative prompt, but the initial perfume bottle test still produced illegible label-like text. Reject or regenerate any suspect image during final review; structural QC does not clear it for submission.
+Stock images must contain no visible text, logos, trademarks, labels or branding. The Klein route adds these exclusions to its positive prompt; SDXL generation and creative upscale use a negative prompt. Prompt exclusions cannot clear content review. Reject or regenerate any suspect image during final review; structural QC does not clear it for submission.
 
 ## Phase 4 upscale preparation
 

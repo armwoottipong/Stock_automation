@@ -21,4 +21,5 @@ benchmarks/background/output/
 !jobs/.gitkeep
 !logs/.gitkeep
 !workflows/generated/.gitkeep
-benchmarks/upscale_x4/
+benchmarks/upscale_x4/2026-09-26/
+benchmarks/generation/*/output/

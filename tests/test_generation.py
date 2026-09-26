@@ -3,9 +3,9 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from ai_image_automation.generation import GenerationRequest, build_sdxl_workflow, resolve_checkpoint
+from ai_image_automation.generation import GenerationRequest, build_flux2_klein_workflow, build_sdxl_workflow, resolve_checkpoint
 from ai_image_automation.quality.image_qc import check_generated_image
-from ai_image_automation.registry import LicenseRecord, LicenseRegistry, ModelRecord, Registry
+from ai_image_automation.registry import LicenseRecord, LicenseRegistry, ModelRecord, Registry, load_registry
 
 
 def installed_model(tmp_path: Path) -> ModelRecord:
@@ -49,6 +49,25 @@ def test_stock_negative_prompt_applies_when_request_has_no_extra_terms(tmp_path)
     workflow = build_sdxl_workflow(GenerationRequest(prompt="plain ceramic mug"), installed_model(tmp_path))
     assert "logo" in workflow["3"]["inputs"]["text"]
     assert "watermark" in workflow["3"]["inputs"]["text"]
+
+
+def test_klein_production_workflow_uses_registered_components_and_fixed_distilled_settings():
+    root = Path(__file__).resolve().parents[1]
+    models = {model.id: model for model in load_registry(root / "data" / "model_registry.json").records}
+    request = GenerationRequest(prompt="one plain red apple on white", steps=4, cfg=1, seed=19,
+                                sampler_name="euler", scheduler="Flux2Scheduler")
+    workflow = build_flux2_klein_workflow(
+        request, models["flux2-klein-4b-fp8"], models["flux2-klein-qwen3-4b-fp4"], models["flux2-klein-vae"]
+    )
+    assert workflow["1"]["inputs"]["unet_name"] == "flux-2-klein-4b-fp8.safetensors"
+    assert workflow["2"]["inputs"]["clip_name"] == "qwen_3_4b_fp4_flux2.safetensors"
+    assert workflow["3"]["inputs"]["vae_name"] == "flux2-vae.safetensors"
+    assert workflow["8"]["inputs"]["steps"] == 4
+    assert workflow["9"]["inputs"]["noise_seed"] == 19
+    assert "no visible text" in workflow["4"]["inputs"]["text"]
+    with pytest.raises(ValueError, match="4 steps"):
+        build_flux2_klein_workflow(request.model_copy(update={"steps": 26}),
+                                   models["flux2-klein-4b-fp8"], models["flux2-klein-qwen3-4b-fp4"], models["flux2-klein-vae"])
 
 
 def test_commercial_generation_excludes_unverified_model(tmp_path):

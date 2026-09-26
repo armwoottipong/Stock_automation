@@ -14,22 +14,23 @@ from ai_image_automation.router import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AS_OF = date(2026, 9, 25)
+AS_OF = date(2026, 9, 26)
 
 
 def test_generate_plan_freezes_stock_prompt_and_registered_selection(tmp_path: Path):
     intent = parse_intent({"operation": "generate", "description": "blue ceramic mug", "seed": 12})
     context = load_context(ROOT / "data")
     plan = build_plan(intent, context, as_of=AS_OF)
-    assert plan["workflow"] == "generate_sdxl"
-    assert plan["models"]["checkpoint"]["id"] == "sdxl-base-1.0"
+    assert plan["workflow"] == "generate_flux2_klein"
+    assert plan["models"]["checkpoint"]["id"] == "flux2-klein-4b-fp8"
+    assert plan["models"]["text_encoder"]["id"] == "flux2-klein-qwen3-4b-fp4"
     assert "pure white seamless background" in plan["request"]["prompt"]
     assert "logo" in plan["request"]["negative_prompt"]
     assert "brand mark" in plan["request"]["negative_prompt"]
     assert plan["request"]["seed"] == 12
-    assert plan["workflow_template"]["path"] == "workflows/templates/generate_sdxl.json"
-    workflow = build_sdxl_workflow(GenerationRequest(**plan["request"]), context.models["sdxl-base-1.0"])
-    assert workflow["3"]["inputs"]["text"] == plan["request"]["negative_prompt"]
+    assert plan["workflow_template"]["path"] == "workflows/templates/generate_flux2_klein.json"
+    assert plan["request"]["steps"] == 4
+    assert plan["request"]["scheduler"] == "Flux2Scheduler"
     path = freeze_plan(plan, tmp_path)
     assert freeze_plan(plan, tmp_path) == path
     assert load_plan(path) == plan
@@ -47,7 +48,7 @@ def test_router_rejects_brand_requests_and_stale_research():
         build_plan(branded, context, as_of=AS_OF)
     plain = parse_intent({"operation": "generate", "description": "blue mug"})
     with pytest.raises(ValueError, match="No fresh reviewed research"):
-        build_plan(plain, context, as_of=date(2026, 10, 26))
+        build_plan(plain, context, as_of=date(2026, 10, 27))
 
 
 def test_glass_plan_routes_to_review_without_inference(tmp_path: Path):

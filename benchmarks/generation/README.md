@@ -1,0 +1,7 @@
+# Generation model comparisons
+
+Create one dated run directory per model-selection or system-update event. Track `cases.json`, `run.json` (model revision, license evidence, workflow hash, parameters and machine), and a short result document in `docs/`. Place generated images, metrics, logs and visual sheets in the ignored `output/` below that run. Do not reuse production `output/` for experiments.
+
+Keep the same cases, dimensions and seed across candidates; record sampler/step differences. Measure whole-background whiteness, subject anatomy, margins, unwanted text/logo/branding, failures, time and GPU memory. Inspect every image at full resolution. No automatic white-corner score or structural QC can choose a stock model by itself. A selected result requires a registry/cache update and a tested router adapter.
+
+2026-09-26 trial: [candidate screen and measured result](../../docs/generation-model-refresh-2026-09-26.md), [`cases.json`](2026-09-26/cases.json), [`run.json`](2026-09-26/run.json). Run `python scripts/benchmark_generation.py --model <id>` per model, then `python scripts/make_generation_contact_sheet.py benchmarks/generation/2026-09-26`. Local results are ignored under `output/`. For a future trial, copy the dated run folder, update `cases.json` and `run.json`, then add a model adapter to the benchmark script; preserve the earlier case set for comparison. Legacy background and upscale comparisons remain in their existing folders because their scripts and result documents refer to those paths.

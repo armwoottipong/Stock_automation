@@ -13,7 +13,28 @@
       "license": "CreativeML Open RAIL++-M",
       "commercial_use": "allowed",
       "source": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/462165984030d82259a11f4367a4eed129e94a7b/LICENSE.md",
-      "last_verified": "2026-09-25"
+      "last_verified": "2026-09-26"
+    },
+    {
+      "resource_id": "flux2-klein-4b-fp8",
+      "license": "Apache-2.0",
+      "commercial_use": "allowed",
+      "source": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4b-fp8/blob/5b4408e59397a4a37ccb46afe426d8ed86379441/LICENSE.md",
+      "last_verified": "2026-09-26"
+    },
+    {
+      "resource_id": "flux2-klein-qwen3-4b-fp4",
+      "license": "Apache-2.0",
+      "commercial_use": "allowed",
+      "source": "https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-4b/tree/5f526678002e43af5551dadb73ce2e8c91b43afe",
+      "last_verified": "2026-09-26"
+    },
+    {
+      "resource_id": "flux2-klein-vae",
+      "license": "Apache-2.0",
+      "commercial_use": "allowed",
+      "source": "https://huggingface.co/Comfy-Org/vae-text-encorder-for-flux-klein-4b/tree/5f526678002e43af5551dadb73ce2e8c91b43afe",
+      "last_verified": "2026-09-26"
     },
     {
       "resource_id": "realesrgan-x2plus",

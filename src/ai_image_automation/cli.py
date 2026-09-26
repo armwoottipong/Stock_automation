@@ -10,7 +10,7 @@ from PIL import Image
 
 from ai_image_automation.comfyui.client import ComfyUIClient, ComfyUIError
 from ai_image_automation.config import ROOT, load_settings
-from ai_image_automation.generation import GenerationRequest, build_sdxl_workflow, resolve_checkpoint
+from ai_image_automation.generation import GenerationRequest, build_flux2_klein_workflow, build_sdxl_workflow, resolve_checkpoint
 from ai_image_automation.jobs.runner import JobRunner
 from ai_image_automation.quality.image_qc import check_generated_image
 from ai_image_automation.quality.stock_policy import STOCK_REVIEW_CHECKS
@@ -33,20 +33,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     submit.add_argument("--workflow", type=Path, required=True)
     resume = commands.add_parser("resume", help="Resume a queued job")
     resume.add_argument("job_id")
-    generate = commands.add_parser("generate", help="Generate one image with a registered SDXL checkpoint")
+    generate = commands.add_parser("generate", help="Generate one image with a registered checkpoint")
     generate.add_argument("--prompt", required=True)
     generate.add_argument("--negative-prompt", default="")
-    generate.add_argument("--model-id", default="sdxl-base-1.0")
+    generate.add_argument("--model-id", default="flux2-klein-4b-fp8")
     generate.add_argument("--registry", type=Path, default=ROOT / "data" / "model_registry.json")
     generate.add_argument("--license-registry", type=Path, default=ROOT / "data" / "license_registry.json")
     generate.add_argument("--checkpoints-dir", type=Path, default=ROOT / "vendor" / "ComfyUI" / "models" / "checkpoints")
     generate.add_argument("--noncommercial", action="store_true")
     generate.add_argument("--width", type=int, default=settings.generation.width)
     generate.add_argument("--height", type=int, default=settings.generation.height)
-    generate.add_argument("--steps", type=int, default=settings.generation.steps)
-    generate.add_argument("--cfg", type=float, default=settings.generation.cfg)
-    generate.add_argument("--sampler-name", default=settings.generation.sampler_name)
-    generate.add_argument("--scheduler", default=settings.generation.scheduler)
+    generate.add_argument("--steps", type=int)
+    generate.add_argument("--cfg", type=float)
+    generate.add_argument("--sampler-name")
+    generate.add_argument("--scheduler")
     generate.add_argument("--seed", type=int, default=0)
     upscale = commands.add_parser("upscale", help="Upscale an existing image 4× by default with a registered pixel model")
     upscale.add_argument("--input", type=Path, required=True)
@@ -175,11 +175,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                 raise ValueError(f"Image QC failed: {qc}")
             result = record.__dict__
         elif args.command == "generate":
+            defaults = (
+                (settings.generation.steps, settings.generation.cfg, settings.generation.sampler_name, settings.generation.scheduler)
+                if args.model_id == "flux2-klein-4b-fp8" else (26, 5.0, "dpmpp_2m", "karras")
+            )
             request = GenerationRequest(
                 prompt=args.prompt, negative_prompt=args.negative_prompt,
-                width=args.width, height=args.height, steps=args.steps,
-                cfg=args.cfg, seed=args.seed, sampler_name=args.sampler_name,
-                scheduler=args.scheduler,
+                width=args.width, height=args.height, steps=args.steps if args.steps is not None else defaults[0],
+                cfg=args.cfg if args.cfg is not None else defaults[1], seed=args.seed,
+                sampler_name=args.sampler_name or defaults[2], scheduler=args.scheduler or defaults[3],
             )
             licenses = LicenseRegistry.model_validate_json(args.license_registry.read_text(encoding="utf-8"))
             model = resolve_checkpoint(
@@ -189,9 +193,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             model_path = Path(model.local_path or "")
             if not model_path.is_absolute():
                 model_path = ROOT / model_path
-            if not model_path.resolve().is_relative_to(args.checkpoints_dir.resolve()):
-                raise ValueError("Checkpoint must be inside the ComfyUI checkpoints directory")
-            workflow = build_sdxl_workflow(request, model)
+            registry = load_registry(args.registry)
+            if model.id == "flux2-klein-4b-fp8":
+                model_root = ROOT / "vendor" / "ComfyUI" / "models"
+                if not model_path.resolve().is_relative_to((model_root / "diffusion_models").resolve()):
+                    raise ValueError("FLUX.2 model must be inside the ComfyUI diffusion_models directory")
+                encoder = resolve_checkpoint(registry, "flux2-klein-qwen3-4b-fp4", commercial=not args.noncommercial, licenses=licenses)
+                vae = resolve_checkpoint(registry, "flux2-klein-vae", commercial=not args.noncommercial, licenses=licenses)
+                workflow = build_flux2_klein_workflow(request, model, encoder, vae)
+            else:
+                if not model_path.resolve().is_relative_to(args.checkpoints_dir.resolve()):
+                    raise ValueError("Checkpoint must be inside the ComfyUI checkpoints directory")
+                workflow = build_sdxl_workflow(request, model)
             record = JobRunner(client, args.jobs_dir).run(workflow)
             job_dir = args.jobs_dir / record.job_id
             (job_dir / "request.json").write_text(

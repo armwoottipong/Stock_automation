@@ -8,7 +8,7 @@ comfyui:
 generation:
   width: 1024
   height: 1024
-  steps: 26
-  cfg: 5.0
-  sampler_name: dpmpp_2m
-  scheduler: karras
+  steps: 4
+  cfg: 1.0
+  sampler_name: euler
+  scheduler: Flux2Scheduler

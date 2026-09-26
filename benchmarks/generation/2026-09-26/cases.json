@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "purpose": "Compare local generation candidates for unbranded white-background stock isolates",
+  "width": 1024,
+  "height": 1024,
+  "cases": [
+    {
+      "id": "apple_whole",
+      "seed": 1181,
+      "subject": "one whole ripe red apple with an intact stem",
+      "prompt": "One whole ripe red apple with an intact stem, centered studio product photograph, entire fruit visible with generous margins, pure white seamless background, even diffuse lighting, no props, no text, no labels, no logos, no branding",
+      "review_focus": ["natural apple anatomy", "stem", "skin texture", "actual white background", "edge integrity"]
+    },
+    {
+      "id": "orange_halved",
+      "seed": 2382,
+      "subject": "one fresh orange cut in half with visible pulp",
+      "prompt": "One fresh orange cut in half with visible pulp, centered studio food photograph, entire fruit visible with generous margins, pure white seamless background, even diffuse lighting, no props, no text, no labels, no logos, no branding",
+      "review_focus": ["plausible pulp and peel", "cut geometry", "actual white background", "edge integrity"]
+    },
+    {
+      "id": "ceramic_mug",
+      "seed": 3483,
+      "subject": "one plain matte blue ceramic mug with a single handle",
+      "prompt": "One plain matte blue ceramic mug with a single handle, centered studio product photograph, entire mug visible with generous margins, pure white seamless background, even diffuse lighting, no props, no text, no labels, no logos, no branding",
+      "review_focus": ["one intact handle", "plausible rim", "actual white background", "edge integrity"]
+    },
+    {
+      "id": "wooden_chair",
+      "seed": 4584,
+      "subject": "one simple unbranded wooden chair with four legs",
+      "prompt": "One simple unbranded wooden chair with four legs, centered studio product photograph, entire chair visible with generous margins, pure white seamless background, even diffuse lighting, no props, no text, no labels, no logos, no branding",
+      "review_focus": ["four coherent legs", "open spaces", "intact slats", "actual white background", "edge integrity"]
+    }
+  ]
+}

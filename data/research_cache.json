@@ -19,6 +19,23 @@
     {
       "task": "generate",
       "subject_type": "isolated_object",
+      "candidate_ids": ["sdxl-base-1.0", "flux2-klein-4b-fp8"],
+      "sources": [
+        "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/tree/462165984030d82259a11f4367a4eed129e94a7b",
+        "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/462165984030d82259a11f4367a4eed129e94a7b/LICENSE.md",
+        "https://huggingface.co/black-forest-labs/FLUX.2-klein-4b-fp8/tree/5b4408e59397a4a37ccb46afe426d8ed86379441",
+        "https://huggingface.co/black-forest-labs/FLUX.2-klein-4b-fp8/blob/5b4408e59397a4a37ccb46afe426d8ed86379441/LICENSE.md"
+      ],
+      "outcome": "selected",
+      "selected_model_id": "flux2-klein-4b-fp8",
+      "benchmark_path": "docs/generation-model-refresh-2026-09-26.md",
+      "summary": "Klein FP8 on the RTX 4060 produced isolated white-background objects in four local cases; SDXL missed the brief in all four. Full-size stock review remains required.",
+      "verified_at": "2026-09-26",
+      "expires_at": "2026-10-26"
+    },
+    {
+      "task": "creative_upscale_checkpoint",
+      "subject_type": "sdxl",
       "candidate_ids": ["sdxl-base-1.0"],
       "sources": [
         "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/tree/462165984030d82259a11f4367a4eed129e94a7b",
@@ -26,10 +43,10 @@
       ],
       "outcome": "selected",
       "selected_model_id": "sdxl-base-1.0",
-      "benchmark_path": "docs/phase-5-results.md",
-      "summary": "Functional Isolate generation baseline; white prompts made gray gradients and stock review remains required.",
-      "verified_at": "2026-09-25",
-      "expires_at": "2026-10-25"
+      "benchmark_path": "docs/phase-4-results.md",
+      "summary": "Existing SDXL checkpoint for the SDXL-only creative tile upscale route.",
+      "verified_at": "2026-09-26",
+      "expires_at": "2026-10-26"
     },
     {
       "task": "remove_background",

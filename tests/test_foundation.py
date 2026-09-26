@@ -16,9 +16,9 @@ def test_default_and_8gb_config_load():
     assert settings.hardware.target_vram_gb == 8
     assert settings.comfyui.base_url == "http://127.0.0.1:8188"
     assert settings.generation.width == 1024
-    assert settings.generation.steps == 26
-    assert settings.generation.sampler_name == "dpmpp_2m"
-    assert settings.generation.scheduler == "karras"
+    assert settings.generation.steps == 4
+    assert settings.generation.sampler_name == "euler"
+    assert settings.generation.scheduler == "Flux2Scheduler"
 
 
 def test_config_rejects_excessive_target_vram(tmp_path):
@@ -62,7 +62,9 @@ def test_all_shipped_registries_validate():
 
     data = Path(__file__).resolve().parents[1] / "data"
     model_records = load_registry(data / "model_registry.json").records
-    assert [record.id for record in model_records] == ["sdxl-base-1.0"]
+    assert [record.id for record in model_records] == [
+        "sdxl-base-1.0", "flux2-klein-4b-fp8", "flux2-klein-qwen3-4b-fp4", "flux2-klein-vae",
+    ]
     assert model_records[0].installed is True
     upscalers = load_registry(data / "upscaler_registry.json").records
     controlnets = load_registry(data / "controlnet_registry.json").records
@@ -79,14 +81,15 @@ def test_all_shipped_registries_validate():
     licenses = LicenseRegistry.model_validate_json((data / "license_registry.json").read_text(encoding="utf-8")).records
     tools = ToolRegistry.model_validate_json((data / "tool_registry.json").read_text(encoding="utf-8")).records
     assert [record.resource_id for record in licenses] == [
-        "comfyui", "sdxl-base-1.0", "realesrgan-x2plus", "realesrgan-x4plus", "xinsir-tile-sdxl-1.0", "ultimate-sd-upscale",
+        "comfyui", "sdxl-base-1.0", "flux2-klein-4b-fp8", "flux2-klein-qwen3-4b-fp4", "flux2-klein-vae",
+        "realesrgan-x2plus", "realesrgan-x4plus", "xinsir-tile-sdxl-1.0", "ultimate-sd-upscale",
         "birefnet-dis", "ben2-base", "bria-rmbg-2.0",
     ]
     assert [record.id for record in tools] == ["comfyui", "ultimate-sd-upscale"]
     assert all(record.installed for record in tools)
     cached = ResearchCache.model_validate_json((data / "research_cache.json").read_text(encoding="utf-8")).entries
     assert {(entry.task, entry.subject_type) for entry in cached} == {
-        ("creative_upscale", "product_refine"), ("generate", "isolated_object"),
+        ("creative_upscale", "product_refine"), ("creative_upscale_checkpoint", "sdxl"), ("generate", "isolated_object"),
         ("remove_background", "opaque_isolate"), ("remove_background", "glass_isolate"),
         ("remove_background", "translucent_isolate"), ("upscale", "pixel_2x"), ("upscale", "pixel_4x"),
     }

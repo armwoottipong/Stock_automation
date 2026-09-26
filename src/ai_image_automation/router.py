@@ -33,11 +33,11 @@ class GenerateIntent(StrictIntent):
     negative_prompt: str = ""
     width: int = 1024
     height: int = 1024
-    steps: int = 26
-    cfg: float = 5.0
+    steps: int = 4
+    cfg: float = 1.0
     seed: int = 0
-    sampler_name: str = "dpmpp_2m"
-    scheduler: str = "karras"
+    sampler_name: str = "euler"
+    scheduler: str = "Flux2Scheduler"
 
 
 class PixelUpscaleIntent(StrictIntent):
@@ -100,7 +100,7 @@ def _prompt_description(description: str) -> str:
     return (
         f"One plain unbranded {clean}, entire object visible with generous margins, "
         "centered product photograph, pure white seamless background, even diffuse studio lighting, "
-        "no props, isolated object"
+        "no props, no text, labels, logos, trademarks or branding, isolated object"
     )
 
 
@@ -152,6 +152,9 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
         if not model_id:
             raise ValueError("No generation model selected")
         models["checkpoint"] = _model_snapshot(context, model_id)
+        if model_id == "flux2-klein-4b-fp8":
+            models["text_encoder"] = _model_snapshot(context, "flux2-klein-qwen3-4b-fp4")
+            models["vae"] = _model_snapshot(context, "flux2-klein-vae")
         extra_negative = ", ".join(filter(None, (
             intent.negative_prompt.strip(), "busy background, gradient backdrop, person, hands, props",
         )))
@@ -161,7 +164,7 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
             width=intent.width, height=intent.height, steps=intent.steps, cfg=intent.cfg,
             seed=intent.seed, sampler_name=intent.sampler_name, scheduler=intent.scheduler,
         ).model_dump(mode="json")
-        workflow = "generate_sdxl"
+        workflow = "generate_flux2_klein" if model_id == "flux2-klein-4b-fp8" else "generate_sdxl"
     elif isinstance(intent, PixelUpscaleIntent):
         evidence, model_id, _ = _research(context, "upscale", intent.subject_type, as_of=as_of)
         research.append(evidence)
@@ -172,7 +175,7 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
         request = {"input": input_info["path"], "scale": intent.scale}
         workflow = "upscale_pixel"
     elif isinstance(intent, CreativeUpscaleIntent):
-        checkpoint_evidence, checkpoint_id, _ = _research(context, "generate", "isolated_object", as_of=as_of)
+        checkpoint_evidence, checkpoint_id, _ = _research(context, "creative_upscale_checkpoint", "sdxl", as_of=as_of)
         control_evidence, control_id, _ = _research(context, "creative_upscale", intent.subject_type, as_of=as_of)
         research.extend((checkpoint_evidence, control_evidence))
         if not checkpoint_id or not control_id:
@@ -207,6 +210,7 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
             route = "manual_review"
 
     templates = {
+        "generate_flux2_klein": "workflows/templates/generate_flux2_klein.json",
         "generate_sdxl": "workflows/templates/generate_sdxl.json",
         "upscale_pixel": "workflows/templates/upscale_pixel.json",
         "upscale_creative_sdxl": "workflows/templates/upscale_creative_sdxl.json",
@@ -263,7 +267,7 @@ def _command(plan: dict, root: Path) -> list[str] | None:
     models = plan["models"]
     if plan["route"] == "manual_review":
         return None
-    if plan["workflow"] == "generate_sdxl":
+    if plan["workflow"] in ("generate_sdxl", "generate_flux2_klein"):
         return [sys.executable, str(root / "controller.py"), "generate", "--model-id", models["checkpoint"]["id"],
                 "--prompt", request["prompt"], "--negative-prompt", request["negative_prompt"],
                 "--width", str(request["width"]), "--height", str(request["height"]),

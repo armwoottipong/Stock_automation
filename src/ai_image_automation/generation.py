@@ -72,3 +72,32 @@ def build_sdxl_workflow(request: GenerationRequest, model: ModelRecord) -> dict[
         sampler_name=request.sampler_name, scheduler=request.scheduler,
     )
     return workflow
+
+
+def build_flux2_klein_workflow(
+    request: GenerationRequest, model: ModelRecord, encoder: ModelRecord, vae: ModelRecord,
+) -> dict[str, Any]:
+    """Build the tested distilled Klein route with its registered components."""
+    if (model.id, encoder.id, vae.id) != (
+        "flux2-klein-4b-fp8", "flux2-klein-qwen3-4b-fp4", "flux2-klein-vae"
+    ):
+        raise ValueError("Unsupported FLUX.2 Klein component set")
+    if request.scheduler != "Flux2Scheduler" or request.sampler_name != "euler":
+        raise ValueError("FLUX.2 Klein requires Flux2Scheduler and euler")
+    if request.cfg != 1.0 or request.steps != 4:
+        raise ValueError("Distilled FLUX.2 Klein is validated only at 4 steps and CFG 1")
+    template = ROOT / "workflows" / "templates" / "generate_flux2_klein.json"
+    workflow: dict[str, Any] = json.loads(template.read_text(encoding="utf-8"))
+    workflow["1"]["inputs"]["unet_name"] = Path(model.local_path or "").name
+    workflow["2"]["inputs"]["clip_name"] = Path(encoder.local_path or "").name
+    workflow["3"]["inputs"]["vae_name"] = Path(vae.local_path or "").name
+    workflow["4"]["inputs"]["text"] = (
+        request.prompt.rstrip(" .") + ", no visible text, labels, logos, watermarks, trademarks or branding"
+    )
+    workflow["6"]["inputs"]["cfg"] = request.cfg
+    workflow["7"]["inputs"].update(width=request.width, height=request.height)
+    workflow["8"]["inputs"].update(steps=request.steps, width=request.width, height=request.height)
+    workflow["9"]["inputs"]["noise_seed"] = request.seed
+    workflow["10"]["inputs"]["sampler_name"] = request.sampler_name
+    workflow["13"]["inputs"]["filename_prefix"] = "generation_flux2_klein"
+    return workflow

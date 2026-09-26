@@ -12,7 +12,7 @@ The current route choices are narrow:
 
 | Operation | Current implementation | Important limit |
 | --- | --- | --- |
-| Generate isolated object | SDXL Base 1.0 functional baseline | A white prompt has previously produced gray gradients. Inspect the actual background and regenerate/reject bad inputs. |
+| Generate isolated object | FLUX.2 Klein 4B distilled FP8 at 4 steps, CFG 1 | Provisional local winner over SDXL on four white-background cases. Inspect anatomy, edges, actual background and branding; keep drafts in staging until approved. |
 | Pixel upscale | RealESRGAN x4plus at **4× by default**; explicit x2plus at 2× | 4× selection is provisional from a five-fruit comparison. Inspect invented detail and contours. |
 | Creative upscale | SDXL + xinsir Tile ControlNet | May change object geometry. Use only if the brief allows creative refinement. |
 | Remove opaque background | BiRefNet DIS, clean cutout without original shadow/floor reflection | Provisional opaque route; inspect alpha on white, dark and checkerboard. |
