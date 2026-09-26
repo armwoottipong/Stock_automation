@@ -2,7 +2,7 @@
 
 ## Behavior
 
-`src/ai_image_automation/research_cache.py` reads and validates all seven `data/*registry.json` files, then returns an offline decision for a `(task, subject_type)` key. It makes no network requests and does not invoke an LLM. The CLI is `scripts/research_cache.py` with `lookup`, `list` and `upsert` actions. Phase 8 can call the same lookup before freezing a job configuration.
+`src/ai_image_automation/research_cache.py` reads and validates all six `data/*registry.json` files plus `data/research_cache.json`, then returns an offline decision for a `(task, subject_type)` key. It makes no network requests and does not invoke an LLM. The CLI is `scripts/research_cache.py` with `lookup`, `list` and `upsert` actions. Phase 8 can call the same lookup before freezing a job configuration.
 
 Every entry has unique candidate IDs, HTTPS evidence links, a reviewed outcome, verification date and expiry date. Validity is limited to 30 days, inclusive. A selected model also needs a local benchmark document, an installed eligible model record, matching official model/license sources in the entry, and matching verification dates in the model and license registries. Missing, expired or invalid entries return **no usable model ID**. The cache never upgrades a model's commercial eligibility by itself.
 

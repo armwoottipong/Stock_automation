@@ -1,6 +1,8 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–9 are complete within their documented scope.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. **Phases 1–10 are complete within their documented scope.**
+
+For a new agent or a production image request, start with the [complete agent runbook](docs/agent-workflow.md). It covers intake, frozen planning, generation, 4× upscale, cutout, review, metadata, final packaging, model/system updates and recovery.
 
 ## Current state
 
@@ -20,7 +22,7 @@ python -c "from ai_image_automation.config import load_settings; print(load_sett
 
 `config/default.yaml` is the baseline configuration. `config/hardware_8gb.yaml` records the hardware profile. Settings are validated by Pydantic; registry files are validated by the models in `src/ai_image_automation/registry.py`. Runtime logs use JSON Lines.
 
-See [implementation plan](docs/implementation-plan.md) for the remaining phases. Routing and batch rendering arrive in later phases.
+See [implementation plan](docs/implementation-plan.md) for the implemented scope and phase gates.
 
 The controller can also be operated from another coding agent or IDE; see [agent usage](docs/agent-usage.md) for workspace and Git worktree notes.
 
@@ -62,7 +64,7 @@ Stock images must contain no visible text, logos, trademarks, labels or branding
 
 ## Phase 4 upscale preparation
 
-The `upscale` command stages an existing image in ComfyUI's input folder, runs a 2× model-backed pixel workflow, and checks output dimensions. `creative-upscale` prepares a guided-filter control image and uses SDXL ControlNet Tile with Ultimate SD Upscale, Half Tile seam fix, and tiled VAE decode. Both commands check registered licenses for commercial jobs and save request, workflow, and QC files under `jobs/<job_id>/`.
+The Phase 4 `upscale` smoke check used a 2× model-backed pixel workflow. The current default is 4×, described below. `creative-upscale` prepares a guided-filter control image and uses SDXL ControlNet Tile with Ultimate SD Upscale, Half Tile seam fix, and tiled VAE decode. Both commands check registered licenses for commercial jobs and save request, workflow, and QC files under `jobs/<job_id>/`.
 
 The [Phase 4 installation record](docs/phase-4-install-plan.md) gives model sources, licenses and hashes. See [Phase 4 results](docs/phase-4-results.md) for live timings and quality limits. With ComfyUI running, use:
 
@@ -106,7 +108,7 @@ python scripts\router.py plan --request path\to\request.json
 python scripts\router.py run --plan jobs\PLAN_ID\plan.json
 ```
 
-Supported operations are isolated-object generation, pixel 2× upscale, creative product upscale and background removal. Transparent subjects route to manual review. An execution result marked `completed_requires_review` is still subject to visual stock checks.
+Supported operations are isolated-object generation, pixel 4× upscale by default (or explicit 2×), creative product upscale and background removal. Transparent subjects route to manual review. An execution result marked `completed_requires_review` is still subject to visual stock checks.
 
 ## Phase 9 batch jobs
 

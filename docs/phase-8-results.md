@@ -11,7 +11,7 @@ The router requires structured intent instead of guessing from arbitrary prose:
 | Operation | Subject type | Route |
 | --- | --- | --- |
 | `generate` | `isolated_object` | SDXL Base functional baseline with white/Isolate and no-brand prompt; image review required. |
-| `upscale` | `pixel_2x` | Registered RealESRGAN x2plus ComfyUI workflow. |
+| `upscale` | `pixel_4x` by default; `pixel_2x` when `scale: 2` is explicit | Registered RealESRGAN x4plus or x2plus ComfyUI workflow. The 4× route was added after Phase 8; see [4× evaluation](x4-upscale-evaluation-2026-09-26.md). |
 | `creative_upscale` | `product_refine` | Registered SDXL checkpoint and xinsir Tile ControlNet workflow. |
 | `remove_background` | `opaque_isolate` | Registered BiRefNet cutout workflow. |
 | `remove_background` | `glass_isolate` or `translucent_isolate` | Manual review record; no automatic cutout. |

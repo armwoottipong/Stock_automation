@@ -1,8 +1,9 @@
 # Project instructions
 
+- For a new agent or production image task, follow `docs/agent-workflow.md` from intake through the final platform package. A real image task is complete only when requested deliverables pass review and `scripts/audit_output.py`; otherwise leave drafts in `staging/` and report the specific blocker.
 - Follow `docs/implementation-plan.md` phase order. Phases 1–10 are complete within their documented scope. Do not treat later phases as implemented.
 - Keep planning separate from execution: freeze job configuration, then let Python and ComfyUI run without LLM calls in the render loop.
-- Read all seven `data/*registry.json` files before researching a model. Do not mark a model commercially usable without an official license source and verification date.
+- Read all six `data/*registry.json` files and `data/research_cache.json` before researching a model. Do not mark a model commercially usable without an official license source and verification date.
 - Do not select a background removal default until the Phase 5 comparison and small benchmark are complete. Treat BiRefNet as one candidate only.
 - Do not download models or install custom nodes without checking source, license, compatibility, disk space, and provenance. Record any installation in the registry.
 - Preserve subject geometry when cutting out backgrounds. Default background policy is clean cutout, including original shadow and floor reflection removal.
