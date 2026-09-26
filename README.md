@@ -131,3 +131,7 @@ python scripts\maintenance.py
 ```
 
 After checking the preview, `python scripts\maintenance.py --apply` removes only `*.tmp` files older than seven days within `jobs/`. It never removes image outputs, models, source images or batch checkpoints. Change the age with `--older-than-days N` (minimum 1). Keep human review in the stock submission workflow, especially for text, logos, trademarks, branding, object geometry and cutout edges.
+
+## Stock metadata
+
+The [stock metadata policy check](docs/stock-metadata-policy-2026-09-26.md) documents Adobe Stock and Shutterstock CSV fields and eligibility. `scripts/export_stock_metadata.py` validates an English catalog and matching asset names before export. It blocks Shutterstock export for generative-AI catalogs. The 25 generated fruit cutouts have a local Adobe CSV draft in `output/fruit_isolates_2026-09-26/metadata/`; it still requires visual review and Adobe's AI disclosure in the Contributor Portal.
