@@ -16,7 +16,7 @@ The supplied setup document is a requirements source. Its suggested model names 
 6. **Background module (complete for opaque isolated objects):** pinned BiRefNet Python inference, conservative alpha clipping, frozen job records, checkpoint/license verification, white/solid input diagnostics and structural geometry/alpha QC. Glass and translucent subjects route to review without an automatic cutout. Every output requires visual review of edges, source shadow/reflection, text, logos and branding. See [Phase 6 results](phase-6-results.md).
 7. **Research cache (complete):** offline lookup and reviewed update, 30-day maximum validity, registry/license revalidation and seeded Phase 4/5 decisions. Stale or invalid entries return no usable model. See [Phase 7 results](phase-7-results.md).
 8. **Router (complete for structured requests):** validate task and subject, use fresh cache and registry decisions, build a stock-aware prompt, freeze model/input hashes and workflow settings, then execute only the saved plan. Transparent subjects route to manual review. See [Phase 8 results](phase-8-results.md).
-9. **Batch:** one plan per batch, file-level checkpoint/retry, progress and report.
+9. **Batch (complete):** one frozen plan per batch with every item decision captured, sequential execution, file-level checkpoint/resume, bounded transient retry, live progress and final report. See [Phase 9 results](phase-9-results.md).
 10. **Hardening:** integration tests, recovery, disk cleanup, metrics, documentation, security review.
 
 ## Phase gates

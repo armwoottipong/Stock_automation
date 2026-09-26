@@ -1,6 +1,6 @@
 # AI Image Automation
 
-Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–8 are complete within their documented scope.**
+Local Python controller and ComfyUI project targeting an RTX 4060 with 8 GB VRAM. The project is being built in phases. **Phases 1–9 are complete within their documented scope.**
 
 ## Current state
 
@@ -107,3 +107,15 @@ python scripts\router.py run --plan jobs\PLAN_ID\plan.json
 ```
 
 Supported operations are isolated-object generation, pixel 2× upscale, creative product upscale and background removal. Transparent subjects route to manual review. An execution result marked `completed_requires_review` is still subject to visual stock checks.
+
+## Phase 9 batch jobs
+
+The [batch runner](docs/phase-9-results.md) freezes every item decision in one batch plan, then executes sequentially with file checkpoints and progress reports. Create a JSON manifest as shown in the Phase 9 results, then run:
+
+```powershell
+python scripts\batch.py plan --manifest path\to\batch.json
+python scripts\batch.py run --plan jobs\batches\BATCH_ID\batch_plan.json
+python scripts\batch.py status --plan jobs\batches\BATCH_ID\batch_plan.json
+```
+
+Running the same plan again resumes pending work and skips completed files. Transient failures have bounded automatic retries; deterministic failures are recorded while later files continue. Every output still requires visual review for photostock.
