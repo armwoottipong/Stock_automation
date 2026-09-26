@@ -50,7 +50,7 @@ def test_asset_and_metadata_guards(tmp_path: Path):
 
 
 def test_fruit_catalog_is_adobe_only():
-    path = Path("output/fruit_isolates_2026-09-26/metadata/catalog.json")
+    path = Path("staging/fruit_isolates_2026-09-26/metadata/catalog.json")
     if not path.is_file():
         pytest.skip("Local generated fruit set not present")
     catalog = json.loads(path.read_text(encoding="utf-8"))

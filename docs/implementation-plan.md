@@ -21,6 +21,8 @@ The supplied setup document is a requirements source. Its suggested model names 
 
 Current pixel upscale behavior after the completed phases: 4× is the default with provisional RealESRGAN x4plus selection for isolated fruit; explicit 2× remains available. See [4× evaluation](x4-upscale-evaluation-2026-09-26.md). This does not change the historical Phase 4 smoke-test scope.
 
+Current artifact placement is defined in the [artifact lifecycle](artifact-lifecycle.md): drafts in `staging/`, model/system comparisons in `benchmarks/`, and only reviewed submission packages in `output/`.
+
 ## Phase gates
 
 Each phase requires tests and a smoke check before proceeding. Phase 2 must prove API health, queue, output retrieval, and resume. Phase 5 must finish before Phase 6 chooses a background model. Model and custom-node downloads require official provenance, license checks, and resource checks. The user has authorized installing necessary programs; this does not turn unverified models into approved production dependencies.

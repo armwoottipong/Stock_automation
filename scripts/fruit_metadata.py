@@ -70,7 +70,7 @@ def build_catalog(manifest: dict, *, cutout_key: str = "cutout") -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root", type=Path, default=Path("output/fruit_isolates_2026-09-26"))
+    parser.add_argument("--root", type=Path, default=Path("staging/fruit_isolates_2026-09-26"))
     parser.add_argument("--manifest", default="manifest.json")
     parser.add_argument("--metadata-dir", default="metadata")
     parser.add_argument("--assets", default="cutout")

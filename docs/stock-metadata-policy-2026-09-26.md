@@ -19,7 +19,7 @@ Shutterstock sources: [AI submission policy](https://submit.shutterstock.com/hel
 
 ## Fruit set status
 
-`output/fruit_isolates_2026-09-26/metadata/catalog.json` describes all 25 cutouts. `adobe_stock_draft.csv` uses the cutout filenames, English titles and ordered keywords. The file names were checked against Adobe's 30-character CSV limit. The catalog records `source_type: generative_ai` and `shutterstock_eligible: false`; the CSV deliberately has no AI keyword because Adobe asks for a visual subject title and a separate portal disclosure.
+`staging/fruit_isolates_2026-09-26/metadata/catalog.json` describes all 25 cutouts. `adobe_stock_draft.csv` uses the cutout filenames, English titles and ordered keywords. The file names were checked against Adobe's 30-character CSV limit. The catalog records `source_type: generative_ai` and `shutterstock_eligible: false`; the CSV deliberately has no AI keyword because Adobe asks for a visual subject title and a separate portal disclosure.
 
 `metadata/embedded_draft/` contains 25 PNG copies with the title, description and keywords embedded in XMP. ExifTool readback matched all 25 catalog records, and decoded pixel hashes matched the source cutouts. `metadata/embedded_draft_report.json` records the pixel hashes. The folder contains only PNG images; the CSV and report stay one level above it. Embedding proves the data is in the files, **not** that Adobe or Shutterstock will automatically populate portal fields from PNG XMP. Confirm imported fields in the portal and use the CSV if needed. XMP keyword lists may not preserve Adobe's search priority in every importer, so review the top ten there.
 
@@ -33,8 +33,8 @@ The Shutterstock exporter is for future genuine eligible photography. Use truthf
 
 ```powershell
 python scripts/fruit_metadata.py
-python scripts/export_stock_metadata.py --catalog output/fruit_isolates_2026-09-26/metadata/catalog.json --assets output/fruit_isolates_2026-09-26/cutout --platform adobe --output output/fruit_isolates_2026-09-26/metadata/adobe_stock_draft.csv
-python scripts/embed_stock_metadata.py --catalog output/fruit_isolates_2026-09-26/metadata/catalog.json --assets output/fruit_isolates_2026-09-26/cutout --output output/fruit_isolates_2026-09-26/metadata/embedded_draft --platform adobe
+python scripts/export_stock_metadata.py --catalog staging/fruit_isolates_2026-09-26/metadata/catalog.json --assets staging/fruit_isolates_2026-09-26/cutout --platform adobe --output staging/fruit_isolates_2026-09-26/metadata/adobe_stock_draft.csv
+python scripts/embed_stock_metadata.py --catalog staging/fruit_isolates_2026-09-26/metadata/catalog.json --assets staging/fruit_isolates_2026-09-26/cutout --output staging/fruit_isolates_2026-09-26/metadata/embedded_draft --platform adobe
 ```
 
 The corresponding Shutterstock commands fail for this AI set by design. None of these commands upload images or metadata.

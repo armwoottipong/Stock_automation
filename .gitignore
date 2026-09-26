@@ -7,6 +7,7 @@ __pycache__/
 .env
 input/*
 output/*
+staging/*
 jobs/*
 logs/*
 workflows/generated/*
@@ -15,6 +16,9 @@ benchmarks/background/input/
 benchmarks/background/output/
 !input/.gitkeep
 !output/.gitkeep
+!staging/.gitkeep
+!staging/README.md
 !jobs/.gitkeep
 !logs/.gitkeep
 !workflows/generated/.gitkeep
+benchmarks/upscale_x4/

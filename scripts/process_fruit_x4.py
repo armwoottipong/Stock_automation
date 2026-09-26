@@ -13,7 +13,7 @@ from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "output" / "fruit_isolates_2026-09-26"
+DATA = ROOT / "staging" / "fruit_isolates_2026-09-26"
 MANIFEST = DATA / "x4_manifest.json"
 
 
