@@ -1,4 +1,4 @@
-"""Reject drafts and untracked files from the final stock output directory."""
+"""Audit packaged stock files and deterministic delivery checks."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 
-REQUIRED_CHECKS = ("visual_review", "metadata", "technical", "rights")
+REQUIRED_CHECKS = ("metadata", "technical", "rights")
 DELIVERABLE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".zip"}
 
 
@@ -36,19 +36,25 @@ def audit(root: Path) -> list[str]:
         if not isinstance(manifest, dict):
             errors.append(f"Invalid submission manifest: {entry.name}")
             continue
-        if manifest.get("status") != "ready_to_submit":
-            errors.append(f"Package is not approved: {entry.name}")
+        if any(name in manifest for name in (
+            "status", "visual_review_owner", "visual_reviewer", "user_cull_after_delivery",
+        )):
+            errors.append(f"Review-status field is not part of a production package: {entry.name}")
         platform = manifest.get("platform")
         origin = manifest.get("source_type")
-        if platform not in {"adobe_stock", "shutterstock"} or origin not in {"generative_ai", "camera_photo"}:
+        if platform not in {"adobe_stock", "shutterstock", "local_delivery"} or origin not in {"generative_ai", "camera_photo"}:
             errors.append(f"Invalid platform or source type: {entry.name}")
+        if platform == "local_delivery" and manifest.get("package_purpose") != "white_png_companion":
+            errors.append(f"Invalid local delivery purpose: {entry.name}")
         if platform == "shutterstock" and origin == "generative_ai":
             errors.append(f"AI-generated package blocked for Shutterstock: {entry.name}")
         if platform == "adobe_stock" and origin == "generative_ai" and manifest.get("adobe_ai_disclosure_required") is not True:
             errors.append(f"Adobe AI disclosure step missing: {entry.name}")
         checks = manifest.get("checks")
         if not isinstance(checks, dict) or any(checks.get(name) is not True for name in REQUIRED_CHECKS):
-            errors.append(f"Required reviews incomplete: {entry.name}")
+            errors.append(f"Required checks incomplete: {entry.name}")
+        if isinstance(checks, dict) and "visual_review" in checks:
+            errors.append(f"Visual-review check is not part of a production package: {entry.name}")
         assets = manifest.get("assets")
         if not isinstance(assets, list) or not assets or any(not isinstance(name, str) for name in assets):
             errors.append(f"No valid asset list: {entry.name}")
@@ -85,7 +91,7 @@ def main() -> int:
         for message in errors:
             print(f"FAIL: {message}")
         return 1
-    print("PASS: output contains only approved submission packages or is empty")
+    print("PASS: output contains only valid submission packages or is empty")
     return 0
 
 

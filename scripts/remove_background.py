@@ -21,7 +21,6 @@ from ai_image_automation.background import (  # noqa: E402
     resolve_background_model, sha256_file,
 )
 from ai_image_automation.background_inference import cutout_birefnet, load_birefnet  # noqa: E402
-from ai_image_automation.quality.stock_policy import STOCK_REVIEW_CHECKS  # noqa: E402
 from ai_image_automation.registry import LicenseRegistry, load_registry  # noqa: E402
 
 
@@ -66,10 +65,9 @@ def run(request: BackgroundRequest, jobs_dir: Path) -> dict:
     qc_file = job_dir / "qc.json"
     if request.subject != "opaque":
         report = {
-            "job_id": job_id, "status": "manual_review_required", "output": None,
+            "job_id": job_id, "status": "unsupported_subject", "output": None,
             "reason": "transparent_subject_has_no_automatic_cutout_path",
             "input_check": input_check,
-            "stock_review_required": list(STOCK_REVIEW_CHECKS),
         }
         write_json(qc_file, report)
         return report
@@ -96,7 +94,7 @@ def run(request: BackgroundRequest, jobs_dir: Path) -> dict:
     os.replace(temporary, output)
     report = {
         "job_id": job_id,
-        "status": "manual_review_required" if qc["passed"] else "qc_failed",
+        "status": "completed" if qc["passed"] else "qc_failed",
         "output": str(output.resolve()),
         "output_sha256": sha256_file(output),
         "model_id": model.id,
@@ -104,9 +102,6 @@ def run(request: BackgroundRequest, jobs_dir: Path) -> dict:
         "peak_allocated_gib": round(torch.cuda.max_memory_allocated() / 2**30, 3),
         "input_check": input_check,
         "cutout_qc": qc,
-        "visual_review_required": [
-            "subject_geometry", "edge_halo", "original_shadow", "floor_reflection", *STOCK_REVIEW_CHECKS,
-        ],
     }
     write_json(qc_file, report)
     return report
@@ -131,7 +126,7 @@ def main() -> int:
         print(f"Error: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(report, indent=2, ensure_ascii=False))
-    return 0 if report["status"] == "manual_review_required" else 2
+    return 0 if report["status"] == "completed" else 2
 
 
 if __name__ == "__main__":

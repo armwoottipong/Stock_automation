@@ -1,4 +1,4 @@
-"""Write title and keywords into XMP of review copies, preserving source files."""
+"""Write title and keywords into XMP copies, preserving source files."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def embed(catalog_path: Path, assets: Path, output: Path, platform: str) -> dict
     report = {
         "platform": platform,
         "source_type": catalog["source_type"],
-        "status": "draft_manual_review_required",
+        "status": "completed",
         "xmp_fields": ["dc:title", "dc:description", "dc:subject"],
         "images": results,
     }

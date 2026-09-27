@@ -4,17 +4,17 @@
 
 `scripts/router.py plan --request <JSON>` validates an explicit operation and subject type. It looks up only fresh reviewed decisions from the Phase 7 cache, checks the model/license registry, builds an unbranded Isolate generation prompt when requested, and freezes the effective settings in `jobs/<plan_id>/plan.json`. The plan ID is a digest of the complete plan payload. Input image hashes, model revisions/hashes, research-entry hashes, workflow-template hash, prompt and parameters are recorded before execution. Creative upscale's existing one-step OOM fallback is also recorded. Replanning the same request returns the same plan; editing the frozen file is detected.
 
-`scripts/router.py run --plan <plan.json>` rechecks research freshness, registry state, input hash and checkpoint hash, then calls an existing Python/ComfyUI workflow with the frozen arguments. No LLM, web search or model selection runs in the render loop. A changed input, model, license or research decision requires a new plan. Completed output remains `completed_requires_review` because structural QC cannot approve a photostock image.
+`scripts/router.py run --plan <plan.json>` rechecks research freshness, registry state, input hash and checkpoint hash, then calls an existing Python/ComfyUI workflow with the frozen arguments. No LLM, web search or model selection runs in the render loop. A changed input, model, license or research decision requires a new plan. The current production runner returns `completed` after deterministic QC; it does not run visual inspection.
 
 The router requires structured intent instead of guessing from arbitrary prose:
 
 | Operation | Subject type | Route |
 | --- | --- | --- |
-| `generate` | `isolated_object` | SDXL Base functional baseline with white/Isolate and no-brand prompt; image review required. |
+| `generate` | `isolated_object` | Current registered generation model with white/Isolate and no-brand prompt. |
 | `upscale` | `pixel_4x` by default; `pixel_2x` when `scale: 2` is explicit | Registered RealESRGAN x4plus or x2plus ComfyUI workflow. The 4× route was added after Phase 8; see [4× evaluation](x4-upscale-evaluation-2026-09-26.md). |
 | `creative_upscale` | `product_refine` | Registered SDXL checkpoint and xinsir Tile ControlNet workflow. |
 | `remove_background` | `opaque_isolate` | Registered BiRefNet cutout workflow. |
-| `remove_background` | `glass_isolate` or `translucent_isolate` | Manual review record; no automatic cutout. |
+| `remove_background` | `glass_isolate` or `translucent_isolate` | `unsupported_subject`; no automatic cutout. |
 
 Example request files:
 

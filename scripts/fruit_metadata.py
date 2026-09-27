@@ -54,14 +54,12 @@ def build_catalog(manifest: dict, *, cutout_key: str = "cutout") -> dict:
             "title": title,
             "keywords": keywords,
             "shutterstock_category": "Food and drink",
-            "stock_review_required": True,
         })
     if len(records) != 25 or len(DETAILS) != 25:
         raise MetadataError("Expected exactly 25 fruit records")
     return {
         "source_type": "generative_ai",
         "language": "en",
-        "review_status": "draft_manual_review_required",
         "adobe_portal_action": "Select Created using generative AI tools before submission",
         "shutterstock_eligible": False,
         "records": records,

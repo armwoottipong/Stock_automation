@@ -56,14 +56,14 @@ def test_glass_plan_routes_to_review_without_inference(tmp_path: Path):
     Image.new("RGB", (96, 96), "white").save(source)
     intent = parse_intent({"operation": "remove_background", "subject_type": "glass_isolate", "input": str(source)})
     plan = build_plan(intent, load_context(ROOT / "data"), as_of=AS_OF)
-    assert plan["route"] == "manual_review"
+    assert plan["route"] == "unsupported"
     assert plan["models"] == {}
     path = freeze_plan(plan, tmp_path / "jobs")
     record = run_plan(path, root=ROOT, as_of=AS_OF)
-    assert record["status"] == "manual_review_required"
+    assert record["status"] == "unsupported_subject"
     assert record["outputs"] == []
     execution_file = path.parent / "execution.json"
-    execution_file.write_text(json.dumps({"plan_id": "wrong", "status": "completed_requires_review", "outputs": []}), encoding="utf-8")
+    execution_file.write_text(json.dumps({"plan_id": "wrong", "status": "completed", "outputs": []}), encoding="utf-8")
     recovered = run_plan(path, root=ROOT, as_of=AS_OF)
     assert recovered == record
     assert json.loads(execution_file.read_text(encoding="utf-8")) == record

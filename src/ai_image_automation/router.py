@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from ai_image_automation.background import sha256_file
 from ai_image_automation.generation import GenerationRequest
-from ai_image_automation.quality.stock_policy import STOCK_REVIEW_CHECKS, with_stock_negative_prompt
+from ai_image_automation.quality.stock_policy import with_stock_negative_prompt
 from ai_image_automation.research_cache import ResearchContext, load_context, lookup
 from ai_image_automation.upscale import CreativeUpscaleRequest
 
@@ -143,7 +143,7 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
     research: list[dict] = []
     models: dict[str, dict] = {}
     input_info: dict | None = None
-    route: Literal["execute", "manual_review"] = "execute"
+    route: Literal["execute", "unsupported"] = "execute"
     retry_policy: dict | None = None
 
     if isinstance(intent, GenerateIntent):
@@ -201,13 +201,13 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
         research.append(evidence)
         input_info = _input_snapshot(intent.input)
         request = {"input": input_info["path"], "subject": intent.subject_type.split("_")[0]}
-        workflow = "remove_background_birefnet" if outcome == "selected" else "manual_review"
+        workflow = "remove_background_birefnet" if outcome == "selected" else "unsupported"
         if outcome == "selected":
             if not model_id:
                 raise ValueError("No background model selected")
             models["background"] = _model_snapshot(context, model_id)
         else:
-            route = "manual_review"
+            route = "unsupported"
 
     templates = {
         "generate_flux2_klein": "workflows/templates/generate_flux2_klein.json",
@@ -232,7 +232,6 @@ def build_plan(intent: Intent, context: ResearchContext, *, as_of: date | None =
         "input": input_info,
         "models": models,
         "research": research,
-        "stock_review_required": list(STOCK_REVIEW_CHECKS),
     }
     digest = hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()[:16]
     return {"plan_id": digest, **payload}
@@ -265,7 +264,7 @@ def load_plan(path: Path) -> dict:
 def _command(plan: dict, root: Path) -> list[str] | None:
     request = plan["request"]
     models = plan["models"]
-    if plan["route"] == "manual_review":
+    if plan["route"] == "unsupported":
         return None
     if plan["workflow"] in ("generate_sdxl", "generate_flux2_klein"):
         return [sys.executable, str(root / "controller.py"), "generate", "--model-id", models["checkpoint"]["id"],
@@ -294,7 +293,7 @@ def _command(plan: dict, root: Path) -> list[str] | None:
 
 def run_plan(path: Path, *, root: Path, as_of: date | None = None) -> dict:
     plan = load_plan(path)
-    if plan.get("schema_version") != 1 or plan.get("route") not in ("execute", "manual_review"):
+    if plan.get("schema_version") != 1 or plan.get("route") not in ("execute", "unsupported"):
         raise ValueError("Unsupported frozen plan")
     context = load_context(root / "data")
     for evidence in plan["research"]:
@@ -332,15 +331,15 @@ def run_plan(path: Path, *, root: Path, as_of: date | None = None) -> dict:
         recorded = json.loads(execution_file.read_text(encoding="utf-8"))
         outputs = recorded.get("outputs", [])
         if (recorded.get("plan_id") == plan["plan_id"]
-                and ((plan["route"] == "manual_review" and recorded.get("status") == "manual_review_required"
+                and ((plan["route"] == "unsupported" and recorded.get("status") == "unsupported_subject"
                       and outputs == [])
-                     or (plan["route"] == "execute" and recorded.get("status") == "completed_requires_review"
+                     or (plan["route"] == "execute" and recorded.get("status") == "completed"
                          and isinstance(outputs, list) and bool(outputs)
                          and all(isinstance(output, str) and Path(output).is_file() for output in outputs)))):
             return recorded
     command = _command(plan, root)
     if command is None:
-        record = {"plan_id": plan["plan_id"], "status": "manual_review_required", "outputs": []}
+        record = {"plan_id": plan["plan_id"], "status": "unsupported_subject", "outputs": []}
     else:
         completed = subprocess.run(command, cwd=root, capture_output=True, text=True)
         if completed.returncode:
@@ -361,7 +360,7 @@ def run_plan(path: Path, *, root: Path, as_of: date | None = None) -> dict:
         if not all(isinstance(output, str) and Path(output).is_file() for output in outputs):
             raise RuntimeError("Frozen job returned missing output images")
         record = {
-            "plan_id": plan["plan_id"], "status": "completed_requires_review", "outputs": outputs,
+            "plan_id": plan["plan_id"], "status": "completed", "outputs": outputs,
             "underlying_job_id": result.get("job_id"),
         }
     temporary = execution_file.with_suffix(".json.tmp")

@@ -67,7 +67,7 @@ def run_stage(stage: str) -> None:
                 raise RuntimeError(f"Upscale did not complete: {name}")
             rendered = Path(report["outputs"][0])
         else:
-            if report["status"] != "manual_review_required" or not report["cutout_qc"]["passed"]:
+            if report["status"] != "completed" or not report["cutout_qc"]["passed"]:
                 raise RuntimeError(f"Cutout QC failed: {name}")
             rendered = Path(report["output"])
         if dimensions(rendered) != expected:
@@ -76,7 +76,6 @@ def run_stage(stage: str) -> None:
         record[target_key] = f"{target_key}/{name}"
         record[f"{stage}_job_id"] = report["job_id"]
         record[f"{stage}_qc_passed"] = True
-        record["stock_review_required"] = True
         write_manifest(manifest)
         print(f"[{index}/25] {stage} done {name} {expected[0]}x{expected[1]}", flush=True)
 

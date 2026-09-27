@@ -53,14 +53,14 @@ def test_batch_checkpoints_each_file_and_resume_skips_completed(tmp_path: Path):
 
     def execute(plan, _batch_dir, _root):
         calls.append(plan["subject_type"])
-        if plan["route"] == "manual_review":
-            return {"status": "manual_review_required", "outputs": []}
-        return {"status": "completed_requires_review", "outputs": [str(output)]}
+        if plan["route"] == "unsupported":
+            return {"status": "unsupported_subject", "outputs": []}
+        return {"status": "completed", "outputs": [str(output)]}
 
     first = run_batch(path, root=ROOT, execute=execute, retry_delay=lambda _: None)
     assert first["progress_percent"] == 100.0
-    assert first["counts"]["completed_requires_review"] == 1
-    assert first["counts"]["manual_review_required"] == 1
+    assert first["counts"]["completed"] == 1
+    assert first["counts"]["unsupported_subject"] == 1
     assert first["metrics"]["total_attempts"] == 2
     assert first["metrics"]["output_bytes"] == len(b"image")
     assert first["metrics"]["execution_seconds"] >= 0
@@ -82,7 +82,7 @@ def test_transient_failure_retries_only_one_file(tmp_path: Path):
         calls += 1
         if calls == 1:
             raise RuntimeError("Connection reset by peer")
-        return {"status": "manual_review_required", "outputs": []}
+        return {"status": "unsupported_subject", "outputs": []}
 
     report = run_batch(path, root=ROOT, execute=execute, retry_delay=delays.append)
     assert calls == 2
@@ -90,7 +90,7 @@ def test_transient_failure_retries_only_one_file(tmp_path: Path):
     assert report["items"][0]["attempts"] == 2
     assert report["items"][0]["total_attempts"] == 2
     assert report["metrics"]["total_attempts"] == 2
-    assert report["items"][0]["status"] == "manual_review_required"
+    assert report["items"][0]["status"] == "unsupported_subject"
 
 
 def test_permanent_failure_is_reported_and_later_files_continue(tmp_path: Path):
@@ -101,12 +101,12 @@ def test_permanent_failure_is_reported_and_later_files_continue(tmp_path: Path):
         calls.append(plan["subject_type"])
         if plan["subject_type"] == "opaque_isolate":
             raise ValueError("model changed")
-        return {"status": "manual_review_required", "outputs": []}
+        return {"status": "unsupported_subject", "outputs": []}
 
     report = run_batch(path, root=ROOT, execute=execute, retry_delay=lambda _: None)
     assert calls == ["opaque_isolate", "glass_isolate"]
     assert report["counts"]["failed"] == 1
-    assert report["counts"]["manual_review_required"] == 1
+    assert report["counts"]["unsupported_subject"] == 1
     assert report["items"][0]["error_code"] == "plan_or_execution_failure"
     assert report["items"][0]["error_type"] == "ValueError"
     assert "model changed" not in json.dumps(report)
@@ -124,7 +124,7 @@ def test_interrupted_running_item_resumes_same_attempt(tmp_path: Path):
     assert batch_report(load_batch(path), path.parent)["items"][0]["status"] == "running"
     report = run_batch(
         path, root=ROOT,
-        execute=lambda *_: {"status": "manual_review_required", "outputs": []},
+        execute=lambda *_: {"status": "unsupported_subject", "outputs": []},
         retry_delay=lambda _: None,
     )
     assert report["items"][0]["attempts"] == 1
@@ -141,14 +141,14 @@ def test_failed_item_requires_explicit_retry_round(tmp_path: Path):
         calls += 1
         if calls == 1:
             raise ValueError("invalid input")
-        return {"status": "manual_review_required", "outputs": []}
+        return {"status": "unsupported_subject", "outputs": []}
 
     first = run_batch(path, root=ROOT, execute=execute, retry_delay=lambda _: None)
     assert first["counts"]["failed"] == 1
     run_batch(path, root=ROOT, execute=execute, retry_delay=lambda _: None)
     assert calls == 1
     retried = run_batch(path, root=ROOT, execute=execute, retry_delay=lambda _: None, retry_failed=True)
-    assert retried["counts"]["manual_review_required"] == 1
+    assert retried["counts"]["unsupported_subject"] == 1
     assert retried["items"][0]["total_attempts"] == 2
 
 
@@ -158,7 +158,7 @@ def test_missing_completed_output_is_reported(tmp_path: Path):
     output.write_bytes(b"image")
     run_batch(
         path, root=ROOT,
-        execute=lambda *_: {"status": "completed_requires_review", "outputs": [str(output)]},
+        execute=lambda *_: {"status": "completed", "outputs": [str(output)]},
         retry_delay=lambda _: None,
     )
     output.unlink()
@@ -178,9 +178,9 @@ def test_duplicate_ids_rejected_before_planning():
 def test_batch_to_frozen_router_manual_review_integration(tmp_path: Path):
     path = make_plan(tmp_path, subjects=("glass_isolate",))
     first = run_batch(path, root=ROOT)
-    assert first["counts"]["manual_review_required"] == 1
+    assert first["counts"]["unsupported_subject"] == 1
     assert first["metrics"]["total_attempts"] == 1
     assert first["metrics"]["execution_seconds"] >= 0
     assert run_batch(path, root=ROOT) == first
     child = path.parent / "child_jobs" / first["items"][0]["plan_id"] / "execution.json"
-    assert json.loads(child.read_text(encoding="utf-8"))["status"] == "manual_review_required"
+    assert json.loads(child.read_text(encoding="utf-8"))["status"] == "unsupported_subject"

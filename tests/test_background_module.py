@@ -19,7 +19,7 @@ def test_simple_background_check_distinguishes_white_solid_and_busy():
     busy = np.zeros((128, 128, 3), dtype=np.uint8)
     busy[:64] = 40
     busy[64:] = 210
-    assert inspect_input(Image.fromarray(busy))["background_review_required"]
+    assert inspect_input(Image.fromarray(busy))["background_is_complex"]
 
 
 def test_refinement_preserves_rgb_and_reports_geometry():

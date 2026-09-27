@@ -21,7 +21,7 @@ The supplied setup document is a requirements source. Its suggested model names 
 
 Current pixel upscale behavior after the completed phases: 4× is the default with provisional RealESRGAN x4plus selection for isolated fruit; explicit 2× remains available. See [4× evaluation](x4-upscale-evaluation-2026-09-26.md). This does not change the historical Phase 4 smoke-test scope.
 
-Current artifact placement is defined in the [artifact lifecycle](artifact-lifecycle.md): drafts in `staging/`, model/system comparisons in `benchmarks/`, and only reviewed submission packages in `output/`.
+Current artifact placement is defined in the [artifact lifecycle](artifact-lifecycle.md): drafts and previews in `staging/`, model/system comparisons with visual inspection in `benchmarks/`, and audited production packages in `output/` without an image-review gate.
 
 ## Phase gates
 

@@ -74,7 +74,7 @@ def inspect_input(image: Image.Image) -> dict:
         "corner_spread": round(spread, 1),
         "near_white": near_white,
         "simple_solid": simple_solid,
-        "background_review_required": not (near_white or simple_solid),
+        "background_is_complex": not (near_white or simple_solid),
     }
 
 

@@ -55,7 +55,6 @@ def build_batch_plan(manifest: BatchManifest, context: ResearchContext, *, as_of
         "schema_version": 1,
         "max_attempts": manifest.max_attempts,
         "items": items,
-        "stock_review_required": ["visible_text", "logo", "branding"],
     }
     return {"batch_id": _digest(payload), **payload}
 
@@ -155,7 +154,7 @@ def _load_state(batch_dir: Path, item_id: str, plan_id: str) -> dict:
         if state.get("plan_id") != plan_id or state.get("id") != item_id:
             raise ValueError(f"Item checkpoint differs from frozen plan: {item_id}")
         if state.get("status") not in {
-            "pending", "running", "pending_retry", "completed_requires_review", "manual_review_required", "failed",
+            "pending", "running", "pending_retry", "completed", "unsupported_subject", "failed",
         } or not isinstance(state.get("attempts"), int) or state["attempts"] < 0:
             raise ValueError(f"Invalid item checkpoint: {item_id}")
         return state
@@ -170,9 +169,9 @@ def _load_state(batch_dir: Path, item_id: str, plan_id: str) -> dict:
 def batch_report(plan: dict, batch_dir: Path) -> dict:
     items = [_load_state(batch_dir, item["id"], item["plan"]["plan_id"]) for item in plan["items"]]
     counts = {status: sum(item["status"] == status for item in items) for status in (
-        "pending", "running", "pending_retry", "completed_requires_review", "manual_review_required", "failed",
+        "pending", "running", "pending_retry", "completed", "unsupported_subject", "failed",
     )}
-    finished = counts["completed_requires_review"] + counts["manual_review_required"] + counts["failed"]
+    finished = counts["completed"] + counts["unsupported_subject"] + counts["failed"]
     return {
         "batch_id": plan["batch_id"], "total": len(items), "counts": counts,
         "finished": finished, "progress_percent": round(100 * finished / len(items), 1),
@@ -188,7 +187,6 @@ def batch_report(plan: dict, batch_dir: Path) -> dict:
                 )) for item in items
             ),
         },
-        "stock_review_required": plan["stock_review_required"],
         "items": items,
     }
 
@@ -224,9 +222,9 @@ def run_batch(
     with _batch_lock(batch_dir):
         for item in plan["items"]:
             state = _load_state(batch_dir, item["id"], item["plan"]["plan_id"])
-            if state["status"] in ("completed_requires_review", "manual_review_required"):
+            if state["status"] in ("completed", "unsupported_subject"):
                 outputs_present = (
-                    state["status"] == "manual_review_required" and not state["outputs"]
+                    state["status"] == "unsupported_subject" and not state["outputs"]
                     or bool(state["outputs"]) and all(Path(output).is_file() for output in state["outputs"])
                 )
                 if outputs_present:
@@ -267,14 +265,14 @@ def run_batch(
                 started = time.monotonic()
                 try:
                     result = execute(item["plan"], batch_dir, root)
-                    if result["status"] not in ("completed_requires_review", "manual_review_required"):
+                    if result["status"] not in ("completed", "unsupported_subject"):
                         raise ValueError("Unexpected child execution status")
                     outputs = result.get("outputs", [])
-                    if result["status"] == "completed_requires_review":
+                    if result["status"] == "completed":
                         if not outputs or not all(Path(output).is_file() for output in outputs):
                             raise ValueError("Completed child job has missing output")
                     elif outputs:
-                        raise ValueError("Manual review route unexpectedly produced output")
+                        raise ValueError("Unsupported route unexpectedly produced output")
                 except Exception as exc:
                     state["duration_seconds"] = round(
                         state.get("duration_seconds", 0.0) + time.monotonic() - started, 3

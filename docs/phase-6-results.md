@@ -2,11 +2,11 @@
 
 ## Implemented path
 
-`scripts/remove_background.py` runs BiRefNet standard DIS in `.venv-comfyui` as a separate Python process. It does not call an LLM or alter the ComfyUI render loop. The request requires an explicit subject type. Only `opaque` runs inference; `glass` and `translucent` produce a review record with no cutout. The checkpoint must match the installed model's SHA-256 and a commercially allowed registry/license pair.
+`scripts/remove_background.py` runs BiRefNet standard DIS in `.venv-comfyui` as a separate Python process. It does not call an LLM or alter the ComfyUI render loop. The request requires an explicit subject type. Only `opaque` runs inference; `glass` and `translucent` return `unsupported_subject` with no cutout. The checkpoint must match the installed model's SHA-256 and a commercially allowed registry/license pair.
 
-Before inference the script freezes input path/hash, model revision/hash, alpha thresholds, source dimensions and clean-cutout policy under `jobs/<job_id>/request.json`. Repeat calls reuse an unchanged output by hash. The result is a transparent PNG and `qc.json`; `manual_review_required` remains the status even when structural QC passes.
+Before inference the script freezes input path/hash, model revision/hash, alpha thresholds, source dimensions and clean-cutout policy under `jobs/<job_id>/request.json`. Repeat calls reuse an unchanged output by hash. The result is a transparent PNG and `qc.json`; structural QC success returns `completed`.
 
-The opaque matte refinement clips very low alpha to transparent and very high alpha to opaque, leaving intermediate edge pixels intact. It does not erode or reshape the subject. QC checks unchanged dimensions and RGB pixels, nonempty foreground, transparent background, object bounds and alpha range. Corner samples report whether an input appears near white or simple solid; this is a diagnostic, not a whole-image proof. Visual review must verify geometry, edge halos, original shadow and floor reflection removal, and absence of text, logos and branding. No automated test can certify these visual properties yet.
+The opaque matte refinement clips very low alpha to transparent and very high alpha to opaque, leaving intermediate edge pixels intact. It does not erode or reshape the subject. QC checks unchanged dimensions and RGB pixels, nonempty foreground, transparent background, object bounds and alpha range. Corner samples report whether an input appears near white or simple solid; this is a diagnostic, not a whole-image proof. Model or system updates use visual benchmark review for geometry, edge halos, shadow/reflection and branding; production does not add that inspection step.
 
 ## Local smoke checks
 
@@ -25,8 +25,8 @@ Peak PyTorch allocated memory was 1.584 GiB for each opaque smoke run on the RTX
 .\.venv-comfyui\Scripts\python.exe scripts\remove_background.py --input path\to\object.png --subject opaque
 ```
 
-The command prints its job ID and output path. Inspect the transparent PNG over both white and dark/checkerboard backgrounds and review `jobs/<job_id>/qc.json` before using it. A successful command means a cutout was made, **not** that it is approved for photostock. For glass or sheer material, pass `--subject glass` or `--subject translucent` to record the required manual route.
+The command prints its job ID and output path. Check `jobs/<job_id>/qc.json` programmatically and continue production when it passes. For glass or sheer material, pass `--subject glass` or `--subject translucent` to record `unsupported_subject`.
 
 ## Remaining limits
 
-There is no reliable automatic segmentation of glass or sheer material, no color decontamination for transparent interiors, and no automatic OCR/logo or visual shadow guarantee. The tested SDXL generation workflow still often makes gray gradients despite pure-white prompts. Phase 7 can cache research, but production stock submission remains gated on human visual review and further input-generation quality work.
+There is no reliable automatic segmentation of glass or sheer material, no color decontamination for transparent interiors, and no automatic OCR/logo or visual shadow guarantee. The tested SDXL generation workflow often made gray gradients despite pure-white prompts. These limits are disclosed without adding an agent image-inspection gate to production.
