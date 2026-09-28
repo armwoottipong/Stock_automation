@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-import zipfile
 
 from scripts.audit_output import audit
 from scripts.package_stock_set import package_set
@@ -36,7 +35,7 @@ def test_drafts_loose_files_and_ai_shutterstock_are_rejected(tmp_path: Path):
         platform="shutterstock", source_type="generative_ai", status="draft",
     )))
     errors = audit(tmp_path)
-    assert any("Invalid archive" in error for error in errors)
+    assert any("Loose file" in error for error in errors)
     assert any("Review-status field" in error for error in errors)
     assert any("blocked for Shutterstock" in error for error in errors)
 
@@ -85,7 +84,7 @@ def test_local_white_png_companion_is_not_an_adobe_package(tmp_path: Path):
     assert any("Invalid local delivery purpose" in error for error in audit(tmp_path))
 
 
-def test_one_zip_contains_multiple_audited_packages(tmp_path: Path):
+def test_one_folder_contains_multiple_audited_packages(tmp_path: Path):
     staging = tmp_path / "staging"
     packages = []
     for name in ("transparent", "white"):
@@ -97,29 +96,32 @@ def test_one_zip_contains_multiple_audited_packages(tmp_path: Path):
     output = tmp_path / "output"
     result = package_set("apple_set", packages, output)
     assert list(output.iterdir()) == [result]
-    assert audit(output, archive_only=True) == []
-    with zipfile.ZipFile(result) as archive:
-        assert archive.read("white/photo.jpg") == b"fixture"
-        assert archive.read("transparent/photo.jpg") == b"fixture"
+    assert result.is_dir()
+    assert audit(output, set_only=True) == []
+    assert (result / "white/photo.jpg").read_bytes() == b"fixture"
+    assert (result / "transparent/photo.jpg").read_bytes() == b"fixture"
     try:
         package_set("apple_set", packages, output)
     except FileExistsError:
         pass
     else:
-        raise AssertionError("Existing set ZIP was overwritten")
+        raise AssertionError("Existing set folder was overwritten")
 
 
-def test_zip_rejects_unsafe_paths_and_incomplete_checks(tmp_path: Path):
-    archive_path = tmp_path / "unsafe.zip"
-    with zipfile.ZipFile(archive_path, "w") as archive:
-        archive.writestr("../escape.jpg", b"fixture")
-    assert any("Unsafe" in error for error in audit(tmp_path))
-    with zipfile.ZipFile(archive_path, "w") as archive:
-        archive.writestr("delivery/photo.jpg", b"fixture")
-        archive.writestr("delivery/submission_manifest.json", json.dumps(production_manifest(checks={})))
+def test_set_rejects_unsafe_paths_and_incomplete_checks(tmp_path: Path):
+    folder = tmp_path / "apple_set"
+    folder.mkdir()
+    manifest = folder / "set_manifest.json"
+    manifest.write_text(json.dumps({"set_id": "apple_set", "packages": ["../escape"]}))
+    assert any("Invalid package list" in error for error in audit(tmp_path))
+    manifest.write_text(json.dumps({"set_id": "apple_set", "packages": ["delivery"]}))
+    package = folder / "delivery"
+    package.mkdir()
+    (package / "photo.jpg").write_bytes(b"fixture")
+    (package / "submission_manifest.json").write_text(json.dumps(production_manifest(checks={})))
     assert any("Required checks incomplete" in error for error in audit(tmp_path))
 
 
 def test_final_output_rejects_unbundled_directories(tmp_path: Path):
     (tmp_path / "delivery").mkdir()
-    assert any("one ZIP per set" in error for error in audit(tmp_path, archive_only=True))
+    assert any("one folder per set" in error for error in audit(tmp_path, set_only=True))

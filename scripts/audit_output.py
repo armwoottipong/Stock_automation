@@ -4,45 +4,40 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path, PurePosixPath
-import stat
-import tempfile
-import zipfile
+from pathlib import Path
 
 
 REQUIRED_CHECKS = ("metadata", "technical", "rights")
-DELIVERABLE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".zip"}
+DELIVERABLE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
 
 
-def audit_archive(path: Path) -> list[str]:
-    """Validate archive paths, CRCs and every contained platform package."""
+def audit_set(path: Path) -> list[str]:
+    """Validate one delivery folder and its platform-specific packages."""
+    if any(entry.is_symlink() for entry in path.iterdir()):
+        return [f"Symlink in set: {path.name}"]
     try:
-        with zipfile.ZipFile(path) as archive, tempfile.TemporaryDirectory() as temp:
-            entries = archive.infolist()
-            if not entries or len(entries) > 10000 or sum(e.file_size for e in entries) > 10 * 1024**3:
-                return [f"Empty or oversized archive: {path.name}"]
-            names: set[str] = set()
-            for entry in entries:
-                name = entry.filename
-                parts = PurePosixPath(name).parts
-                if (not parts or name.startswith("/") or "\\" in name or ":" in name
-                        or ".." in parts or name.casefold() in names
-                        or stat.S_ISLNK(entry.external_attr >> 16)):
-                    return [f"Unsafe or duplicate archive path: {path.name}/{name}"]
-                names.add(name.casefold())
-                if not entry.is_dir() and len(parts) < 2:
-                    return [f"Loose file inside archive: {path.name}/{name}"]
-            bad = archive.testzip()
-            if bad:
-                return [f"Corrupt archive member: {path.name}/{bad}"]
-            archive.extractall(temp)
-            errors = audit(Path(temp))
-            return [f"{path.name}: {error}" for error in errors]
-    except (OSError, ValueError, RuntimeError, zipfile.BadZipFile) as exc:
-        return [f"Invalid archive: {path.name}: {exc}"]
+        manifest = json.loads((path / "set_manifest.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return [f"Invalid set manifest: {path.name}"]
+    if not isinstance(manifest, dict) or manifest.get("set_id") != path.name:
+        return [f"Invalid set identity: {path.name}"]
+    packages = manifest.get("packages")
+    if (not isinstance(packages, list) or not packages
+            or any(not isinstance(name, str) or name in {"", ".", ".."}
+                   or any(char in name for char in "/\\:") for name in packages)
+            or len({name.casefold() for name in packages}) != len(packages)):
+        return [f"Invalid package list: {path.name}"]
+    if any(key in manifest for key in ("status", "visual_review", "visual_review_owner", "checks")):
+        return [f"Set manifest must only describe delivery inventory: {path.name}"]
+    actual = {entry.name for entry in path.iterdir()}
+    if actual != set(packages) | {"set_manifest.json"}:
+        return [f"Unlisted or missing package in set: {path.name}"]
+    if any(not (path / name / "submission_manifest.json").is_file() for name in packages):
+        return [f"Missing internal submission manifest: {path.name}"]
+    return [f"{path.name}: {error}" for error in audit(path, package_names=set(packages))]
 
 
-def audit(root: Path, *, archive_only: bool = False, package_names: set[str] | None = None) -> list[str]:
+def audit(root: Path, *, set_only: bool = False, package_names: set[str] | None = None) -> list[str]:
     errors: list[str] = []
     if not root.is_dir():
         return [f"Output directory is missing: {root}"]
@@ -54,14 +49,14 @@ def audit(root: Path, *, archive_only: bool = False, package_names: set[str] | N
         if entry.is_symlink():
             errors.append(f"Symlink in output: {entry.name}")
             continue
-        if entry.is_file() and entry.suffix.lower() == ".zip":
-            errors.extend(audit_archive(entry))
-            continue
         if not entry.is_dir():
             errors.append(f"Loose file in output: {entry.name}")
             continue
-        if archive_only:
-            errors.append(f"Unbundled package in output (one ZIP per set required): {entry.name}")
+        if (entry / "set_manifest.json").is_file():
+            errors.extend(audit_set(entry))
+            continue
+        if set_only:
+            errors.append(f"Missing set manifest (one folder per set required): {entry.name}")
             continue
         manifest_path = entry / "submission_manifest.json"
         if not manifest_path.is_file():
@@ -117,7 +112,7 @@ def audit(root: Path, *, archive_only: bool = False, package_names: set[str] | N
         if actual != {name.replace("\\", "/") for name in declared}:
             errors.append(f"Unlisted or missing files in package: {entry.name}")
         if not any(Path(name).suffix.lower() in DELIVERABLE_SUFFIXES for name in declared):
-            errors.append(f"No image or archive deliverable: {entry.name}")
+            errors.append(f"No image deliverable: {entry.name}")
     return errors
 
 
@@ -125,12 +120,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "output")
     args = parser.parse_args()
-    errors = audit(args.output, archive_only=True)
+    errors = audit(args.output, set_only=True)
     if errors:
         for message in errors:
             print(f"FAIL: {message}")
         return 1
-    print("PASS: output contains only audited set ZIPs or is empty")
+    print("PASS: output contains only audited set folders or is empty")
     return 0
 
 

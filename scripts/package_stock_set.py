@@ -1,17 +1,19 @@
-"""Bundle prepared packages into one verified ZIP per requested image set."""
+"""Copy prepared packages into one audited folder per requested image set."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
 from pathlib import Path
 import re
+import shutil
 import tempfile
-import zipfile
 
 try:
-    from scripts.audit_output import audit, audit_archive
+    from scripts.audit_output import audit
 except ModuleNotFoundError:
-    from audit_output import audit, audit_archive
+    from audit_output import audit
 
 
 def package_set(set_id: str, packages: list[Path], output: Path) -> Path:
@@ -26,23 +28,30 @@ def package_set(set_id: str, packages: list[Path], output: Path) -> Path:
         if errors:
             raise ValueError("; ".join(errors))
     output.mkdir(parents=True, exist_ok=True)
-    destination = output / f"{set_id}.zip"
+    destination = output / set_id
     if destination.exists():
         raise FileExistsError(f"Refusing to overwrite {destination}")
     with tempfile.TemporaryDirectory(dir=output.parent) as temp:
         pending = Path(temp) / destination.name
-        with zipfile.ZipFile(pending, "w", compression=zipfile.ZIP_STORED) as archive:
-            for package in packages:
-                for file in sorted(package.rglob("*")):
-                    if file.is_file():
-                        archive.write(file, f"{package.name}/{file.relative_to(package).as_posix()}")
-        errors = audit_archive(pending)
+        pending.mkdir()
+        for package in packages:
+            target = pending / package.name
+            shutil.copytree(package, target)
+            for source in package.rglob("*"):
+                if source.is_file():
+                    copied = target / source.relative_to(package)
+                    if hashlib.sha256(source.read_bytes()).digest() != hashlib.sha256(copied.read_bytes()).digest():
+                        raise ValueError(f"Copy checksum mismatch: {source}")
+        (pending / "set_manifest.json").write_text(json.dumps({
+            "set_id": set_id, "packages": [package.name for package in packages],
+        }, indent=2) + "\n", encoding="utf-8")
+        errors = audit(Path(temp), set_only=True)
         if errors:
             raise ValueError("; ".join(errors))
-        # Exclusive creation prevents an existing set from being overwritten.
-        with pending.open("rb") as source, destination.open("xb") as target:
-            import shutil
-            shutil.copyfileobj(source, target)
+        # Windows rename refuses an existing destination; check again before publishing.
+        if destination.exists():
+            raise FileExistsError(f"Refusing to overwrite {destination}")
+        pending.rename(destination)
     return destination
 
 
