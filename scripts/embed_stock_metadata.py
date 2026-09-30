@@ -40,24 +40,31 @@ def embed(catalog_path: Path, assets: Path, output: Path, platform: str) -> dict
         source = assets / item["filename"]
         target = output / item["filename"]
         before = pixel_digest(source)
-        shutil.copy2(source, target)
-        command = [
-            executable, "-overwrite_original", "-q", "-q", "-sep", "|",
-            f"-XMP-dc:Title={item['title']}",
-            f"-XMP-dc:Description={item['title']}",
-            f"-XMP-dc:Subject={'|'.join(item['keywords'])}",
-            str(target),
-        ]
-        subprocess.run(command, check=True, capture_output=True, text=True, env=env)
+        if not target.exists():
+            shutil.copy2(source, target)
+            command = [
+                executable, "-overwrite_original", "-q", "-q", "-sep", "|",
+                f"-XMP-dc:Title={item['title']}",
+                f"-XMP-dc:Description={item['title']}",
+                f"-XMP-dc:Subject={'|'.join(item['keywords'])}",
+                str(target),
+            ]
+            subprocess.run(command, check=True, capture_output=True, text=True, env=env)
         if pixel_digest(target) != before:
             target.unlink(missing_ok=True)
             raise MetadataError(f"Image pixels changed: {item['filename']}")
         results.append({"filename": item["filename"], "pixel_sha256": before})
-    readback = subprocess.run(
-        [executable, "-j", "-XMP-dc:Title", "-XMP-dc:Description", "-XMP-dc:Subject", *[str(output / item["filename"]) for item in catalog["records"]]],
-        check=True, capture_output=True, text=True, env=env,
-    )
-    extracted = {Path(row["SourceFile"]).name: row for row in json.loads(readback.stdout)}
+    extracted = {}
+    chunk_size = 50
+    records = catalog["records"]
+    for i in range(0, len(records), chunk_size):
+        chunk = records[i:i + chunk_size]
+        readback = subprocess.run(
+            [executable, "-j", "-XMP-dc:Title", "-XMP-dc:Description", "-XMP-dc:Subject", *[str(output / item["filename"]) for item in chunk]],
+            check=True, capture_output=True, text=True, env=env,
+        )
+        for row in json.loads(readback.stdout):
+            extracted[Path(row["SourceFile"]).name] = row
     for item in catalog["records"]:
         row = extracted[item["filename"]]
         if row.get("Title") != item["title"] or row.get("Description") != item["title"] or row.get("Subject") != item["keywords"]:

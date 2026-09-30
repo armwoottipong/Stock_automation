@@ -11,6 +11,23 @@ REQUIRED_CHECKS = ("metadata", "technical", "rights")
 DELIVERABLE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff"}
 
 
+def find_manifest(entry: Path) -> Path | None:
+    # 1. Inside entry directly
+    p = entry / "submission_manifest.json"
+    if p.is_file():
+        return p
+    # 2. Inside sibling metadata/ directory
+    meta_dir = entry.parent / "metadata"
+    for candidate in [
+        meta_dir / f"{entry.name}_manifest.json",
+        meta_dir / f"{entry.name}.json",
+        meta_dir / f"{entry.name}_submission_manifest.json",
+    ]:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def audit_set(path: Path) -> list[str]:
     """Validate one delivery folder and its platform-specific packages."""
     if any(entry.is_symlink() for entry in path.iterdir()):
@@ -32,7 +49,7 @@ def audit_set(path: Path) -> list[str]:
     actual = {entry.name for entry in path.iterdir()}
     if actual != set(packages) | {"set_manifest.json"}:
         return [f"Unlisted or missing package in set: {path.name}"]
-    if any(not (path / name / "submission_manifest.json").is_file() for name in packages):
+    if any(find_manifest(path / name) is None for name in packages):
         return [f"Missing internal submission manifest: {path.name}"]
     return [f"{path.name}: {error}" for error in audit(path, package_names=set(packages))]
 
@@ -58,8 +75,8 @@ def audit(root: Path, *, set_only: bool = False, package_names: set[str] | None 
         if set_only:
             errors.append(f"Missing set manifest (one folder per set required): {entry.name}")
             continue
-        manifest_path = entry / "submission_manifest.json"
-        if not manifest_path.is_file():
+        manifest_path = find_manifest(entry)
+        if not manifest_path or not manifest_path.is_file():
             errors.append(f"Missing submission manifest: {entry.name}")
             continue
         try:
@@ -78,7 +95,7 @@ def audit(root: Path, *, set_only: bool = False, package_names: set[str] | None 
         origin = manifest.get("source_type")
         if platform not in {"adobe_stock", "shutterstock", "local_delivery"} or origin not in {"generative_ai", "camera_photo"}:
             errors.append(f"Invalid platform or source type: {entry.name}")
-        if platform == "local_delivery" and manifest.get("package_purpose") != "white_png_companion":
+        if platform == "local_delivery" and manifest.get("package_purpose") not in {"white_png_companion", "white_jpeg_companion", "metadata_companion"}:
             errors.append(f"Invalid local delivery purpose: {entry.name}")
         if platform == "shutterstock" and origin == "generative_ai":
             errors.append(f"AI-generated package blocked for Shutterstock: {entry.name}")
@@ -111,7 +128,8 @@ def audit(root: Path, *, set_only: bool = False, package_names: set[str] | None 
         actual = {p.relative_to(entry).as_posix() for p in package_entries if p.is_file() and p.name not in {"submission_manifest.json", "README.md"}}
         if actual != {name.replace("\\", "/") for name in declared}:
             errors.append(f"Unlisted or missing files in package: {entry.name}")
-        if not any(Path(name).suffix.lower() in DELIVERABLE_SUFFIXES for name in declared):
+        is_metadata = platform == "local_delivery" and manifest.get("package_purpose") == "metadata_companion"
+        if not is_metadata and not any(Path(name).suffix.lower() in DELIVERABLE_SUFFIXES for name in declared):
             errors.append(f"No image deliverable: {entry.name}")
     return errors
 

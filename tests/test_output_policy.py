@@ -69,7 +69,7 @@ def test_required_deterministic_checks_still_apply(tmp_path: Path):
     assert any("Required checks incomplete" in error for error in audit(tmp_path))
 
 
-def test_local_white_png_companion_is_not_an_adobe_package(tmp_path: Path):
+def test_local_white_png_and_jpeg_companion_packages(tmp_path: Path):
     package = tmp_path / "white_png"
     package.mkdir()
     (package / "apple_white.png").write_bytes(b"fixture")
@@ -79,6 +79,27 @@ def test_local_white_png_companion_is_not_an_adobe_package(tmp_path: Path):
     )
     (package / "submission_manifest.json").write_text(json.dumps(manifest))
     assert audit(tmp_path) == []
+
+    package_jpg = tmp_path / "white_jpeg"
+    package_jpg.mkdir()
+    (package_jpg / "apple_white.jpg").write_bytes(b"fixture")
+    manifest_jpg = production_manifest(
+        platform="local_delivery", package_purpose="white_jpeg_companion",
+        source_type="generative_ai", assets=["apple_white.jpg"],
+    )
+    (package_jpg / "submission_manifest.json").write_text(json.dumps(manifest_jpg))
+    assert audit(tmp_path) == []
+
+    package_meta = tmp_path / "metadata"
+    package_meta.mkdir()
+    (package_meta / "adobe_stock.csv").write_bytes(b"fixture")
+    manifest_meta = production_manifest(
+        platform="local_delivery", package_purpose="metadata_companion",
+        source_type="generative_ai", assets=["adobe_stock.csv"],
+    )
+    (package_meta / "submission_manifest.json").write_text(json.dumps(manifest_meta))
+    assert audit(tmp_path) == []
+
     del manifest["package_purpose"]
     (package / "submission_manifest.json").write_text(json.dumps(manifest))
     assert any("Invalid local delivery purpose" in error for error in audit(tmp_path))
@@ -125,3 +146,27 @@ def test_set_rejects_unsafe_paths_and_incomplete_checks(tmp_path: Path):
 def test_final_output_rejects_unbundled_directories(tmp_path: Path):
     (tmp_path / "delivery").mkdir()
     assert any("one folder per set" in error for error in audit(tmp_path, set_only=True))
+
+
+def test_image_package_can_have_zero_json_with_manifest_in_metadata(tmp_path: Path):
+    set_dir = tmp_path / "clean_set"
+    set_dir.mkdir()
+    (set_dir / "set_manifest.json").write_text(json.dumps({"set_id": "clean_set", "packages": ["adobe_stock", "metadata"]}))
+
+    # Image package: STRICTLY only images, zero JSON files!
+    img_pkg = set_dir / "adobe_stock"
+    img_pkg.mkdir()
+    (img_pkg / "photo_01.png").write_bytes(b"png_bytes")
+    assert all(f.suffix == ".png" for f in img_pkg.iterdir())
+    assert not any(f.suffix == ".json" for f in img_pkg.iterdir())
+
+    # Metadata package: contains manifests and companion docs
+    meta_pkg = set_dir / "metadata"
+    meta_pkg.mkdir()
+    (meta_pkg / "adobe_stock_manifest.json").write_text(json.dumps(production_manifest(assets=["photo_01.png"])))
+    (meta_pkg / "submission_manifest.json").write_text(json.dumps(production_manifest(
+        platform="local_delivery", package_purpose="metadata_companion", assets=["adobe_stock_manifest.json"]
+    )))
+
+    errors = audit(tmp_path, set_only=True)
+    assert errors == []

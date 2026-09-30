@@ -10,5 +10,6 @@
 - Do not download models or install custom nodes without checking source, license, compatibility, disk space, and provenance. Record any installation in the registry.
 - Preserve subject geometry when cutting out backgrounds. Default background policy is clean cutout, including original shadow and floor reflection removal.
 - Stock candidates should exclude visible text, logos, trademarks and branding in prompts, but deterministic QC cannot prove their absence. The user may cull unsuitable images after delivery, including anatomy, cutout, shadow, similarity and metadata mismatches. Rework only when the user asks.
+- Stock metadata tagging rules: Never include "transparent", "transparent background", or "transparency" tags or titles on JPEG images, because JPEG files are composited on solid white (or solid colored) backgrounds. Use "white background" or "isolated on white background" for JPEGs. Reserve "transparent background" and "transparent" exclusively for RGBA transparent PNG assets.
 - Reusable project skill guides for tested workflows are in `.agents/skills/`; keep their scope aligned with completed phases.
 - Validate configuration, keep structured logs free of secrets, and run tests after each phase.

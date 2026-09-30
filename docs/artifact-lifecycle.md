@@ -15,10 +15,20 @@ New model installations still require official source, license, compatibility, s
 ## Moving a prepared set to output
 
 1. Run deterministic QC and confirm commercial rights, technical format, size, sRGB, and platform-appropriate metadata. Check current platform rules. For Adobe AI assets, record that the Contributor Portal AI disclosure is required; do not route contributor AI assets to Shutterstock.
-2. Prepare a contact sheet and package directories under `staging/<set>/packages/`. Copy every structurally valid exact upload file plus platform CSV into the appropriate package. The agent does not inspect images during production, and there is no user approval pause.
-3. Add `submission_manifest.json` to each internal package without image-review status or visual-review fields, with truthful metadata, technical and rights checks. List every package file in `assets`. Run `python scripts/package_stock_set.py --set-id <set-id> --packages <package-dir> [<companion-dir>]` to produce exactly one `output/<set-id>/` folder. The command verifies each package, checks copied-file hashes, writes `set_manifest.json` listing internal packages, and refuses to overwrite an existing set. Run `python scripts/audit_output.py` before delivery. Audit checks safe paths, structure and deterministic declarations, not visual quality or stock platform acceptance.
-4. After delivery, the user may remove images with bad geometry, artifacts, cutout edges, shadows/reflections, visible text/logos/branding, similarity or metadata mismatches. Rework only if requested.
+2. Prepare package directories under `staging/<set>/packages/`:
+   - An audited platform package (e.g., `adobe_stock/` containing strictly 100% transparent PNG images — zero JSON or CSV files).
+   - A companion JPEG package (e.g., `white_jpeg_companion/` containing strictly 100% white-background JPEGs with embedded XMP — zero JSON or CSV files).
+   - A dedicated metadata package (`metadata/` containing `adobe_stock.csv`, `catalog.json`, `contact_sheet_4k.jpg`, and all package manifests `<package>_manifest.json`, with `package_purpose: "metadata_companion"`).
+   - This ensures image folders contain exclusively image deliverables, making drag-and-drop batch upload directly to contributor portals seamless and error-free.
+3. Package manifests are stored in the sibling `metadata/` package (e.g. `adobe_stock_manifest.json`, `white_jpeg_companion_manifest.json`) or directly inside the package if standalone. Run `python scripts/package_stock_set.py --set-id <set-id> --packages <package-dir> [<companion-dir>]` to produce exactly one `output/<set-id>/` folder. The command verifies each package, checks copied-file hashes, writes `set_manifest.json` listing internal packages, and refuses to overwrite an existing set. Run `python scripts/audit_output.py` before delivery. Audit checks safe paths, structure and deterministic declarations, not visual quality or stock platform acceptance.
+4. After delivery, intermediate staging files (`staging/<set>/raw_1024`, `upscaled_4k`, `cutout_4k`, `packages`) are automatically cleaned via `run_4k_stock_pipeline.py` or `python scripts/clean_workspace.py --staging --apply`. The delivered package in `output/` is self-contained with its images, contact sheet, and metadata.
+5. The user may inspect deliverables and cull images with bad geometry, artifacts, cutout edges, shadows/reflections, visible text/logos/branding, similarity or metadata mismatches. Rework only if requested.
 
-If a request also needs white-background PNGs, place them in a labeled `local_delivery` subdirectory inside the same set folder, with `package_purpose: white_png_companion`. Keep its manifest separate from the Adobe assets. Adobe Stock's PNG route requires transparency, so do not present solid-white PNGs as Adobe PNG submission assets. Multiple formats from the same request must not create multiple directories at the top level of `output/`.
+## Long-term workspace hygiene
 
-The 2026-09-26 fruit set is delivered in `output/fruit_isolates_2026-09-26_new/`. The 2026-09-27 apple request is delivered in `output/apple_white_cutout_2026-09-27_001/`, containing both transparent and white PNG packages. Their contact sheets and preparation evidence remain under their respective staging identities.
+To prevent junk files and disk bloat in the long run:
+- **Staging Cleanup**: Intermediate generation, upscale, and cutout images are purged after successful delivery.
+- **ComfyUI Cache**: Temporary node output files in `vendor/ComfyUI/output` and `vendor/ComfyUI/temp` are pruned periodically.
+- **Job Images**: Completed job `.png` renders in `jobs/` can be pruned while preserving all JSON metadata for deterministic reproducibility.
+- **Command**: Run `python scripts/clean_workspace.py --all --apply` (or with `--dry-run` to preview).
+

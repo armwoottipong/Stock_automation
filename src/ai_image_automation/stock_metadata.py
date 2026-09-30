@@ -16,6 +16,25 @@ class MetadataError(ValueError):
 ADOBE_HEADERS = ("Filename", "Title", "Keywords", "Category", "Releases")
 SHUTTERSTOCK_HEADERS = ("Filename", "Description", "Keywords", "Categories")
 FORBIDDEN_PUBLIC_TERMS = re.compile(r"\b(?:ai[ -]?generated|generative ai|artificial intelligence)\b", re.I)
+TRANSPARENT_TERMS = re.compile(r"\b(?:transparent(?:[ -]?background)?|transparency)\b", re.I)
+
+
+def adapt_keywords_for_format(keywords: list[str], filename: str) -> list[str]:
+    """Adapt keywords for format: for JPEGs on white background, remove transparency terms and ensure white background is present."""
+    if filename.lower().endswith((".jpg", ".jpeg")):
+        adapted = [k for k in keywords if not TRANSPARENT_TERMS.search(k)]
+        if not any(k.lower() == "white background" for k in adapted):
+            adapted.append("white background")
+        return adapted
+    return list(keywords)
+
+
+def adapt_title_for_format(title: str, filename: str) -> str:
+    """Adapt title for format: for JPEGs, replace transparency terms with white background."""
+    if filename.lower().endswith((".jpg", ".jpeg")):
+        title = TRANSPARENT_TERMS.sub("white background", title)
+        title = re.sub(r"\s+", " ", title).strip()
+    return title
 
 
 def validate_catalog(catalog: dict, platform: str, asset_dir: Path | None = None) -> None:
@@ -44,10 +63,14 @@ def validate_catalog(catalog: dict, platform: str, asset_dir: Path | None = None
             raise MetadataError(f"Missing asset: {filename}")
         if not isinstance(title, str) or len(title.split()) < 5 or FORBIDDEN_PUBLIC_TERMS.search(title):
             raise MetadataError(f"Invalid or misleading title: {filename}")
+        if filename.lower().endswith((".jpg", ".jpeg")) and TRANSPARENT_TERMS.search(title):
+            raise MetadataError(f"JPEG title must not contain transparency terms (it has a white background): {filename}")
         if not isinstance(keywords, list) or not 7 <= len(keywords) <= 49:
             raise MetadataError(f"Expected 7–49 keywords: {filename}")
         if any(not isinstance(k, str) or not k.strip() or "," in k or FORBIDDEN_PUBLIC_TERMS.search(k) for k in keywords):
             raise MetadataError(f"Invalid keyword: {filename}")
+        if filename.lower().endswith((".jpg", ".jpeg")) and any(TRANSPARENT_TERMS.search(k) for k in keywords):
+            raise MetadataError(f"JPEG keywords must not contain transparency terms (it has a white background): {filename}")
         if len({k.casefold().strip() for k in keywords}) != len(keywords):
             raise MetadataError(f"Duplicate keyword: {filename}")
         if platform == "adobe":

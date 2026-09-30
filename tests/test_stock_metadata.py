@@ -49,6 +49,35 @@ def test_asset_and_metadata_guards(tmp_path: Path):
         export_csv(catalog, "adobe")
 
 
+def test_jpeg_rejects_transparency_terms():
+    catalog = fixture_catalog(filename="apple.jpg")
+    catalog["records"][0]["keywords"].append("transparent background")
+    with pytest.raises(MetadataError, match="JPEG keywords must not contain transparency terms"):
+        export_csv(catalog, "adobe")
+
+    catalog2 = fixture_catalog(filename="apple.jpg")
+    catalog2["records"][0]["title"] = "Fresh red apple on transparent background"
+    with pytest.raises(MetadataError, match="JPEG title must not contain transparency terms"):
+        export_csv(catalog2, "adobe")
+
+
+def test_adapt_metadata_for_jpeg():
+    from ai_image_automation.stock_metadata import adapt_keywords_for_format, adapt_title_for_format
+    kws = ["apple", "red", "fruit", "isolated", "transparent background", "nature", "botanical"]
+    adapted_kws = adapt_keywords_for_format(kws, "apple.jpg")
+    assert "transparent background" not in adapted_kws
+    assert "white background" in adapted_kws
+
+    # PNG remains untouched
+    adapted_png = adapt_keywords_for_format(kws, "apple.png")
+    assert "transparent background" in adapted_png
+
+    title = "Fresh Red Apple On Transparent Background"
+    adapted_title = adapt_title_for_format(title, "apple.jpg")
+    assert "transparent background" not in adapted_title.lower()
+    assert "white background" in adapted_title.lower()
+
+
 def test_fruit_catalog_is_adobe_only():
     path = Path("staging/fruit_isolates_2026-09-26/metadata/catalog.json")
     if not path.is_file():
