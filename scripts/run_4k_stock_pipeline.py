@@ -302,17 +302,26 @@ def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--set", choices=["flowers_200", "plants_250", "plants_mushrooms_500", "both"], default="plants_mushrooms_500")
+    parser.add_argument("--set", choices=["flowers_200", "plants_250", "plants_mushrooms_500", "both"])
+    parser.add_argument("--set-id", type=str, help="Specific set ID")
+    parser.add_argument("--set-dir", type=Path, help="Specific staging directory for set")
     parser.add_argument("--keep-staging", action="store_true", help="Keep intermediate staging image files")
     args = parser.parse_args()
 
     sets = []
-    if args.set in ["flowers_200", "both"]:
-        sets.append((ROOT / "staging" / "flowers_200_2026-09-29", "flowers_200_2026-09-29"))
-    if args.set in ["plants_250", "both"]:
-        sets.append((ROOT / "staging" / "plants_flowers_250_2026-09-29_001", "plants_flowers_250_2026-09-29_001"))
-    if args.set in ["plants_mushrooms_500"]:
-        sets.append((ROOT / "staging" / "plants_mushrooms_500_2026-09-30_001", "plants_mushrooms_500_2026-09-30_001"))
+    if args.set_id and args.set_dir:
+        sets.append((args.set_dir, args.set_id))
+    elif args.set_id:
+        sets.append((ROOT / "staging" / args.set_id, args.set_id))
+    elif args.set:
+        if args.set in ["flowers_200", "both"]:
+            sets.append((ROOT / "staging" / "flowers_200_2026-09-29", "flowers_200_2026-09-29"))
+        if args.set in ["plants_250", "both"]:
+            sets.append((ROOT / "staging" / "plants_flowers_250_2026-09-29_001", "plants_flowers_250_2026-09-29_001"))
+        if args.set in ["plants_mushrooms_500"]:
+            sets.append((ROOT / "staging" / "plants_mushrooms_500_2026-09-30_001", "plants_mushrooms_500_2026-09-30_001"))
+    else:
+        parser.error("Either --set or --set-id must be provided")
 
     for sdir, sid in sets:
         run_pipeline(sdir, sid, keep_staging=args.keep_staging)
@@ -320,3 +329,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
