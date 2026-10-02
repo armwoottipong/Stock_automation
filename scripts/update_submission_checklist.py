@@ -137,9 +137,9 @@ def scan_output_sets(output_dir: Path) -> list[dict[str, Any]]:
             if as_dir.is_dir():
                 image_count = len([f for f in as_dir.iterdir() if f.suffix.lower() in (".png", ".jpg", ".jpeg")])
 
-        if not title:
-            clean_name = re.sub(r"_\d{4}-\d{2}-\d{2}(_\d+)?", "", set_id)
-            title = clean_name.replace("_", " ").title()
+        catalog_title = title
+        # User requested: "เอาชื่อ folder เป็น title"
+        title = set_id
 
         has_csv = (entry / "metadata" / "adobe_stock.csv").is_file() or (entry / "adobe_stock" / "adobe_stock.csv").is_file()
         has_white_jpg = (entry / "white_jpeg_companion").is_dir()
@@ -152,6 +152,7 @@ def scan_output_sets(output_dir: Path) -> list[dict[str, Any]]:
             "created_at": created_at,
             "timestamp": timestamp,
             "title": title,
+            "catalog_title": catalog_title,
             "image_count": image_count,
             "packages": packages,
             "has_csv": has_csv,
@@ -354,6 +355,35 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       background: var(--surface);
     }}
 
+    .controls-right {{
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }}
+
+    .sort-btn {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      user-select: none;
+    }}
+
+    .sort-btn:hover {{
+      border-color: var(--text-muted);
+      color: var(--text);
+      background: var(--surface);
+    }}
+
     /* Todo List */
     .todo-list {{
       display: flex;
@@ -392,11 +422,20 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     }}
 
     .todo-title {{
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text);
-      margin-bottom: 12px;
+      margin-bottom: 6px;
       line-height: 1.4;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      cursor: pointer;
+      display: inline-block;
+      transition: color 0.15s ease;
+      word-break: break-all;
+    }}
+
+    .todo-title:hover {{
+      color: var(--accent);
     }}
 
     .todo-row.all-done .todo-title {{
@@ -675,7 +714,19 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       <button class="filter-item" onclick="setFilter('pending', this)">Pending</button>
       <button class="filter-item" onclick="setFilter('completed', this)">Completed</button>
     </div>
-    <input type="text" class="search-input" id="searchInput" placeholder="Search projects..." oninput="handleSearch()">
+    <div class="controls-right">
+      <button class="sort-btn" id="sortOrderBtn" onclick="toggleSortOrder()" title="Sorted: Newest first (Click for Oldest first)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 16 4 4 4-4"></path>
+          <path d="M7 20V4"></path>
+          <path d="M11 4h10"></path>
+          <path d="M11 8h7"></path>
+          <path d="M11 12h4"></path>
+        </svg>
+        <span>Newest</span>
+      </button>
+      <input type="text" class="search-input" id="searchInput" placeholder="Search projects..." oninput="handleSearch()">
+    </div>
   </div>
 
   <!-- Todo List -->
@@ -724,6 +775,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   const STORAGE_KEY = "stock_submission_checklist_v1";
   const PLATFORMS_KEY = "stock_configured_platforms_v1";
   const DELETED_KEY = "stock_deleted_projects_v1";
+  const SORT_KEY = "stock_sort_order_v1";
 
   // Firebase configuration
   const firebaseConfig = {{
@@ -745,17 +797,75 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     submissions: {{}},
     deleted_projects: [],
     currentFilter: "all",
-    searchQuery: ""
+    searchQuery: "",
+    sortOrder: "desc"
   }};
 
   function initApp() {{
     loadPlatforms();
     loadSubmissions();
     loadDeletedProjects();
+    loadSortOrder();
     mergeProjects(INITIAL_PROJECTS);
     tryFetchProjects();
     renderApp();
+    updateSortButtonUI();
     initFirebase();
+  }}
+
+  function loadSortOrder() {{
+    try {{
+      const saved = localStorage.getItem(SORT_KEY);
+      if (saved === "asc" || saved === "desc") {{
+        appState.sortOrder = saved;
+      }}
+    }} catch (e) {{}}
+  }}
+
+  function sortProjects() {{
+    const isDesc = appState.sortOrder === "desc";
+    appState.projects.sort((a, b) => {{
+      const tA = a.timestamp || (a.created_at ? new Date(a.created_at).getTime() : 0);
+      const tB = b.timestamp || (b.created_at ? new Date(b.created_at).getTime() : 0);
+      return isDesc ? (tB - tA) : (tA - tB);
+    }});
+  }}
+
+  function updateSortButtonUI() {{
+    const btn = document.getElementById("sortOrderBtn");
+    if (!btn) return;
+    const isDesc = appState.sortOrder === "desc";
+    btn.title = isDesc ? "Sorted: Newest first (Click for Oldest first)" : "Sorted: Oldest first (Click for Newest first)";
+    btn.innerHTML = isDesc ? `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 16 4 4 4-4"></path>
+        <path d="M7 20V4"></path>
+        <path d="M11 4h10"></path>
+        <path d="M11 8h7"></path>
+        <path d="M11 12h4"></path>
+      </svg>
+      <span>Newest</span>
+    ` : `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m3 8 4-4 4 4"></path>
+        <path d="M7 4v16"></path>
+        <path d="M11 12h4"></path>
+        <path d="M11 16h7"></path>
+        <path d="M11 20h10"></path>
+      </svg>
+      <span>Oldest</span>
+    `;
+  }}
+
+  function toggleSortOrder() {{
+    appState.sortOrder = appState.sortOrder === "desc" ? "asc" : "desc";
+    try {{
+      localStorage.setItem(SORT_KEY, appState.sortOrder);
+    }} catch (e) {{}}
+    sortProjects();
+    updateSortButtonUI();
+    renderList();
+    showToast(appState.sortOrder === "desc" ? "Sorted: Newest first" : "Sorted: Oldest first");
   }}
 
   function loadDeletedProjects() {{
@@ -942,12 +1052,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
         appState.submissions[item.id] = {{ checks: {{}}, notes: "" }};
       }}
     }});
-    // Sort projects chronologically by creation timestamp descending (newest first)
-    appState.projects.sort((a, b) => {{
-      const tA = a.timestamp || (a.created_at ? new Date(a.created_at).getTime() : 0);
-      const tB = b.timestamp || (b.created_at ? new Date(b.created_at).getTime() : 0);
-      return tB - tA;
-    }});
+    sortProjects();
   }}
 
   async function tryFetchProjects() {{
@@ -1116,7 +1221,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       if (appState.deleted_projects.includes(p.id)) return false;
       const sub = appState.submissions[p.id] || {{}};
       const complete = isSetComplete(p.id);
-      const text = `${{p.id}} ${{p.title}} ${{sub.notes || ''}}`.toLowerCase();
+      const text = `${{p.id}} ${{p.title}} ${{p.catalog_title || ''}} ${{sub.notes || ''}}`.toLowerCase();
       const matchesSearch = !q || text.includes(q);
 
       if (!matchesSearch) return false;
@@ -1137,12 +1242,12 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
 
       return `
         <div class="todo-row ${{complete ? 'all-done' : ''}}">
-          <div class="todo-meta-line">
-            <span class="set-id" onclick="copySetId('${{p.id}}')" title="Click to copy set ID">${{p.id}}</span>
-            <span>${{p.image_count}} assets · ${{p.created_at || p.date}}</span>
-          </div>
+          <div class="todo-title" onclick="copySetId('${{p.id}}')" title="Click to copy folder name">${{p.title}}</div>
 
-          <div class="todo-title">${{p.title}}</div>
+          <div class="todo-meta-line">
+            <span>${{p.image_count}} assets · ${{p.created_at || p.date}}${{p.catalog_title ? ` · ${{p.catalog_title}}` : ''}}</span>
+            <span class="set-id" onclick="copySetId('${{p.id}}')" title="Click to copy folder name" style="cursor:pointer; opacity:0.8;">📋 Copy</span>
+          </div>
 
           <div class="platforms-checklist">
             ${{appState.platforms.map(plat => {{

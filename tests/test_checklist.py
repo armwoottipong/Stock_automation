@@ -36,8 +36,8 @@ def test_scan_output_sets_extracts_correct_fields(tmp_path: Path):
     assert len(scanned) == 1
     item = scanned[0]
     assert item["id"] == "mock_fruits_2026-10-02_001"
-    assert item["date"] == "2026-10-02"
-    assert item["title"] == "Crisp Fuji Apple Isolated on White"
+    assert item["title"] == "mock_fruits_2026-10-02_001"
+    assert item["catalog_title"] == "Crisp Fuji Apple Isolated on White"
     assert item["image_count"] == 1
     assert "adobe_stock" in item["packages"]
     assert item["has_csv"] is True
