@@ -541,154 +541,26 @@
   </div>
 </div>
 
-<div class="toast" id="toast">Saved to local storage</div>
+<div class="toast" id="toast">☁️ Saved to Database</div>
 
 <script>
   // Initial projects embedded by pipeline
   const INITIAL_PROJECTS = [
   {
-    "id": "potted_trees_500_2026-10-01_001",
-    "date": "2026-10-01",
-    "title": "Potted Ficus Lyrata Tree in White Ceramic Pot",
-    "image_count": 500,
-    "packages": [
-      "adobe_stock",
-      "white_jpeg_companion",
-      "metadata"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "ficus lyrata",
-      "fig tree",
-      "ficus plant",
-      "tropical tree",
-      "potted tree"
-    ]
-  },
-  {
-    "id": "potted_decor_plants_500_2026-10-01_001",
-    "date": "2026-10-01",
-    "title": "Potted Monstera Deliciosa in White Ceramic Pot",
-    "image_count": 500,
-    "packages": [
-      "adobe_stock",
-      "white_jpeg_companion",
-      "metadata"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "monstera deliciosa",
-      "monstera",
-      "swiss cheese plant",
-      "split leaves",
-      "tropical foliage"
-    ]
-  },
-  {
-    "id": "plants_mushrooms_500_2026-09-30_001",
-    "date": "2026-09-30",
-    "title": "Fresh Healthy Alocasia Centered Full View",
-    "image_count": 500,
-    "packages": [
-      "adobe_stock",
-      "metadata",
-      "white_jpeg_companion"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "alocasia",
-      "plant",
-      "greenery",
-      "foliage",
-      "leaf"
-    ]
-  },
-  {
-    "id": "plants_flowers_250_2026-09-29_001",
-    "date": "2026-09-29",
-    "title": "Fresh Monstera Centered Full View",
-    "image_count": 250,
-    "packages": [
-      "adobe_stock",
-      "metadata",
-      "white_jpeg_companion"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "monstera",
-      "greenery",
-      "foliage",
-      "leaf",
-      "indoor plant"
-    ]
-  },
-  {
-    "id": "fruit_isolates_2026-09-26_new",
-    "date": "2026-09-26",
-    "title": "Ripe red apple isolated on transparent background",
-    "image_count": 25,
+    "id": "test_set_2026-10-02_001",
+    "date": "2026-10-02",
+    "created_at": "2026-10-02 09:49",
+    "timestamp": 1790909387.0498688,
+    "title": "Test Set",
+    "image_count": 1,
     "packages": [
       "adobe_stock"
     ],
-    "has_csv": true,
+    "has_csv": false,
     "has_white_jpg": false,
     "has_transparent_png": true,
     "has_contact_sheet": false,
     "keywords_sample": []
-  },
-  {
-    "id": "flowers_200_2026-09-29",
-    "date": "2026-09-29",
-    "title": "Fresh Red Rose in Full Blossom",
-    "image_count": 200,
-    "packages": [
-      "adobe_stock",
-      "metadata",
-      "white_jpeg_companion"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "rose",
-      "red rose",
-      "flower",
-      "bloom",
-      "petal"
-    ]
-  },
-  {
-    "id": "bread_isolates_2026-09-28_001",
-    "date": "2026-09-28",
-    "title": "Baguette bread long golden loaf with diagonal scoring isolated",
-    "image_count": 100,
-    "packages": [
-      "adobe_stock"
-    ],
-    "has_csv": true,
-    "has_white_jpg": false,
-    "has_transparent_png": true,
-    "has_contact_sheet": false,
-    "keywords_sample": [
-      "baguette bread",
-      "long golden loaf with diagonal scoring",
-      "bread",
-      "bakery",
-      "baked"
-    ]
   }
 ];
 
@@ -747,10 +619,10 @@
     }
   }
 
-  function saveDeletedProjects() {
+  function saveDeletedProjects(customToast) {
     try {
       localStorage.setItem(DELETED_KEY, JSON.stringify(appState.deleted_projects));
-      pushToCloud();
+      pushToCloud(customToast || "☁️ Saved to Database");
     } catch (e) {
       console.error(e);
     }
@@ -761,17 +633,15 @@
     if (!appState.deleted_projects.includes(setId)) {
       appState.deleted_projects.push(setId);
     }
-    saveDeletedProjects();
-    showToast(`Removed ${setId}`);
+    saveDeletedProjects(`🗑️ Removed ${setId}`);
     renderApp();
   }
 
   function restoreProject(setId) {
     appState.deleted_projects = appState.deleted_projects.filter(id => id !== setId);
-    saveDeletedProjects();
+    saveDeletedProjects(`↩️ Restored ${setId}`);
     renderDeletedList();
     renderApp();
-    showToast(`Restored ${setId}`);
   }
 
   function initFirebase() {
@@ -832,20 +702,31 @@
     }
   }
 
-  function pushToCloud() {
-    if (!firestoreDb || isCloudSyncing) return;
-    try {
+  let pushTimer = null;
+
+  function pushToCloud(customMsg) {
+    if (!firestoreDb) {
+      showToast(customMsg || "💾 Saved locally (Offline)");
+      return;
+    }
+    if (isCloudSyncing) return;
+
+    if (pushTimer) clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => {
       firestoreDb.collection("stock_checklist").doc("state").set({
         submissions: appState.submissions,
         platforms: appState.platforms,
         deleted_projects: appState.deleted_projects,
         last_updated: new Date().toISOString()
-      }, { merge: true }).catch(err => {
+      }, { merge: true })
+      .then(() => {
+        showToast(customMsg || "☁️ Saved to Database");
+      })
+      .catch(err => {
         console.warn("Cloud push warning:", err.message);
+        showToast("💾 Saved locally (Cloud offline)");
       });
-    } catch (e) {
-      console.error(e);
-    }
+    }, 120);
   }
 
   function loadPlatforms() {
@@ -865,8 +746,7 @@
   function savePlatforms() {
     try {
       localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
-      showToast("Agencies updated");
-      pushToCloud();
+      pushToCloud("☁️ Agencies updated & synced");
     } catch (e) {
       console.error(e);
     }
@@ -884,14 +764,13 @@
     }
   }
 
-  function saveSubmissions() {
+  function saveSubmissions(customToast) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         version: 2,
         submissions: appState.submissions
       }));
-      showToast("Saved to local storage");
-      pushToCloud();
+      pushToCloud(customToast || "☁️ Saved to Database");
     } catch (e) {
       console.error(e);
     }
@@ -909,6 +788,12 @@
       if (!appState.submissions[item.id]) {
         appState.submissions[item.id] = { checks: {}, notes: "" };
       }
+    });
+    // Sort projects chronologically by creation timestamp descending (newest first)
+    appState.projects.sort((a, b) => {
+      const tA = a.timestamp || (a.created_at ? new Date(a.created_at).getTime() : 0);
+      const tB = b.timestamp || (b.created_at ? new Date(b.created_at).getTime() : 0);
+      return tB - tA;
     });
   }
 
@@ -952,15 +837,20 @@
     if (el) el.classList.toggle("open");
   }
 
+  let noteTimer = null;
   function updateNotes(setId, val) {
     if (!appState.submissions[setId]) appState.submissions[setId] = { checks: {}, notes: "" };
     appState.submissions[setId].notes = val;
-    saveSubmissions();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 2, submissions: appState.submissions }));
+    if (noteTimer) clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => {
+      pushToCloud("☁️ Note saved to Database");
+    }, 400);
   }
 
   function copySetId(setId) {
     navigator.clipboard.writeText(setId).then(() => {
-      showToast(`Copied ${setId}`);
+      showToast(`📋 Copied ${setId}`);
     }).catch(() => {});
   }
 
@@ -1058,9 +948,11 @@
 
   function showToast(msg) {
     const toast = document.getElementById("toast");
+    if (!toast) return;
     toast.textContent = msg;
     toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2000);
+    if (window._toastTimeout) clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => toast.classList.remove("show"), 2200);
   }
 
   function renderList() {
@@ -1094,7 +986,7 @@
         <div class="todo-row ${complete ? 'all-done' : ''}">
           <div class="todo-meta-line">
             <span class="set-id" onclick="copySetId('${p.id}')" title="Click to copy set ID">${p.id}</span>
-            <span>${p.image_count} assets · ${p.date}</span>
+            <span>${p.image_count} assets · ${p.created_at || p.date}</span>
           </div>
 
           <div class="todo-title">${p.title}</div>

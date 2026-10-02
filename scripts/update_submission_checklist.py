@@ -27,23 +27,44 @@ def scan_output_sets(output_dir: Path) -> list[dict[str, Any]]:
 
     projects: list[dict[str, Any]] = []
 
-    for entry in sorted(output_dir.iterdir(), reverse=True):
-        if not entry.is_dir() or entry.name.startswith("."):
-            continue
+    import datetime
 
+    entries = [p for p in output_dir.iterdir() if p.is_dir() and not p.name.startswith(".")]
+
+    def get_sort_key(p: Path) -> float:
+        try:
+            stat = p.stat()
+            ctime = getattr(stat, "st_ctime", 0.0)
+            mtime = getattr(stat, "st_mtime", 0.0)
+            return max(ctime, mtime)
+        except Exception:
+            return 0.0
+
+    # Sort strictly by creation / modification timestamp descending (newest first)
+    entries.sort(key=get_sort_key, reverse=True)
+
+    for entry in entries:
         set_id = entry.name
 
-        # Extract date from set_id or folder modification time
+        # Calculate creation timestamp and formatted date/time
+        try:
+            stat = entry.stat()
+            ctime = getattr(stat, "st_ctime", 0.0)
+            mtime = getattr(stat, "st_mtime", 0.0)
+            timestamp = max(ctime, mtime)
+            created_at = datetime.datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            timestamp = 0.0
+            created_at = ""
+
+        # Extract date from set_id or folder creation time
         date_match = re.search(r"(\d{4}-\d{2}-\d{2})", set_id)
         if date_match:
             date_str = date_match.group(1)
+        elif created_at:
+            date_str = created_at.split(" ")[0]
         else:
-            try:
-                import datetime
-                mtime = entry.stat().st_mtime
-                date_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d")
-            except Exception:
-                date_str = "Unknown"
+            date_str = "Unknown"
 
         # Read set_manifest.json
         packages: list[str] = []
@@ -128,6 +149,8 @@ def scan_output_sets(output_dir: Path) -> list[dict[str, Any]]:
         projects.append({
             "id": set_id,
             "date": date_str,
+            "created_at": created_at,
+            "timestamp": timestamp,
             "title": title,
             "image_count": image_count,
             "packages": packages,
@@ -688,7 +711,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   </div>
 </div>
 
-<div class="toast" id="toast">Saved to local storage</div>
+<div class="toast" id="toast">☁️ Saved to Database</div>
 
 <script>
   // Initial projects embedded by pipeline
@@ -749,10 +772,10 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     }}
   }}
 
-  function saveDeletedProjects() {{
+  function saveDeletedProjects(customToast) {{
     try {{
       localStorage.setItem(DELETED_KEY, JSON.stringify(appState.deleted_projects));
-      pushToCloud();
+      pushToCloud(customToast || "☁️ Saved to Database");
     }} catch (e) {{
       console.error(e);
     }}
@@ -763,17 +786,15 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     if (!appState.deleted_projects.includes(setId)) {{
       appState.deleted_projects.push(setId);
     }}
-    saveDeletedProjects();
-    showToast(`Removed ${{setId}}`);
+    saveDeletedProjects(`🗑️ Removed ${{setId}}`);
     renderApp();
   }}
 
   function restoreProject(setId) {{
     appState.deleted_projects = appState.deleted_projects.filter(id => id !== setId);
-    saveDeletedProjects();
+    saveDeletedProjects(`↩️ Restored ${{setId}}`);
     renderDeletedList();
     renderApp();
-    showToast(`Restored ${{setId}}`);
   }}
 
   function initFirebase() {{
@@ -834,20 +855,31 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     }}
   }}
 
-  function pushToCloud() {{
-    if (!firestoreDb || isCloudSyncing) return;
-    try {{
+  let pushTimer = null;
+
+  function pushToCloud(customMsg) {{
+    if (!firestoreDb) {{
+      showToast(customMsg || "💾 Saved locally (Offline)");
+      return;
+    }}
+    if (isCloudSyncing) return;
+
+    if (pushTimer) clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => {{
       firestoreDb.collection("stock_checklist").doc("state").set({{
         submissions: appState.submissions,
         platforms: appState.platforms,
         deleted_projects: appState.deleted_projects,
         last_updated: new Date().toISOString()
-      }}, {{ merge: true }}).catch(err => {{
+      }}, {{ merge: true }})
+      .then(() => {{
+        showToast(customMsg || "☁️ Saved to Database");
+      }})
+      .catch(err => {{
         console.warn("Cloud push warning:", err.message);
+        showToast("💾 Saved locally (Cloud offline)");
       }});
-    }} catch (e) {{
-      console.error(e);
-    }}
+    }}, 120);
   }}
 
   function loadPlatforms() {{
@@ -867,8 +899,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   function savePlatforms() {{
     try {{
       localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
-      showToast("Agencies updated");
-      pushToCloud();
+      pushToCloud("☁️ Agencies updated & synced");
     }} catch (e) {{
       console.error(e);
     }}
@@ -886,14 +917,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     }}
   }}
 
-  function saveSubmissions() {{
+  function saveSubmissions(customToast) {{
     try {{
       localStorage.setItem(STORAGE_KEY, JSON.stringify({{
         version: 2,
         submissions: appState.submissions
       }}));
-      showToast("Saved to local storage");
-      pushToCloud();
+      pushToCloud(customToast || "☁️ Saved to Database");
     }} catch (e) {{
       console.error(e);
     }}
@@ -911,6 +941,12 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       if (!appState.submissions[item.id]) {{
         appState.submissions[item.id] = {{ checks: {{}}, notes: "" }};
       }}
+    }});
+    // Sort projects chronologically by creation timestamp descending (newest first)
+    appState.projects.sort((a, b) => {{
+      const tA = a.timestamp || (a.created_at ? new Date(a.created_at).getTime() : 0);
+      const tB = b.timestamp || (b.created_at ? new Date(b.created_at).getTime() : 0);
+      return tB - tA;
     }});
   }}
 
@@ -954,15 +990,20 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     if (el) el.classList.toggle("open");
   }}
 
+  let noteTimer = null;
   function updateNotes(setId, val) {{
     if (!appState.submissions[setId]) appState.submissions[setId] = {{ checks: {{}}, notes: "" }};
     appState.submissions[setId].notes = val;
-    saveSubmissions();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({{ version: 2, submissions: appState.submissions }}));
+    if (noteTimer) clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => {{
+      pushToCloud("☁️ Note saved to Database");
+    }}, 400);
   }}
 
   function copySetId(setId) {{
     navigator.clipboard.writeText(setId).then(() => {{
-      showToast(`Copied ${{setId}}`);
+      showToast(`📋 Copied ${{setId}}`);
     }}).catch(() => {{}});
   }}
 
@@ -1060,9 +1101,11 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
 
   function showToast(msg) {{
     const toast = document.getElementById("toast");
+    if (!toast) return;
     toast.textContent = msg;
     toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2000);
+    if (window._toastTimeout) clearTimeout(window._toastTimeout);
+    window._toastTimeout = setTimeout(() => toast.classList.remove("show"), 2200);
   }}
 
   function renderList() {{
@@ -1096,7 +1139,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
         <div class="todo-row ${{complete ? 'all-done' : ''}}">
           <div class="todo-meta-line">
             <span class="set-id" onclick="copySetId('${{p.id}}')" title="Click to copy set ID">${{p.id}}</span>
-            <span>${{p.image_count}} assets · ${{p.date}}</span>
+            <span>${{p.image_count}} assets · ${{p.created_at || p.date}}</span>
           </div>
 
           <div class="todo-title">${{p.title}}</div>

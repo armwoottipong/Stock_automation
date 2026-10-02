@@ -1,146 +1,18 @@
 [
   {
-    "id": "potted_trees_500_2026-10-01_001",
-    "date": "2026-10-01",
-    "title": "Potted Ficus Lyrata Tree in White Ceramic Pot",
-    "image_count": 500,
-    "packages": [
-      "adobe_stock",
-      "white_jpeg_companion",
-      "metadata"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "ficus lyrata",
-      "fig tree",
-      "ficus plant",
-      "tropical tree",
-      "potted tree"
-    ]
-  },
-  {
-    "id": "potted_decor_plants_500_2026-10-01_001",
-    "date": "2026-10-01",
-    "title": "Potted Monstera Deliciosa in White Ceramic Pot",
-    "image_count": 500,
-    "packages": [
-      "adobe_stock",
-      "white_jpeg_companion",
-      "metadata"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "monstera deliciosa",
-      "monstera",
-      "swiss cheese plant",
-      "split leaves",
-      "tropical foliage"
-    ]
-  },
-  {
-    "id": "plants_mushrooms_500_2026-09-30_001",
-    "date": "2026-09-30",
-    "title": "Fresh Healthy Alocasia Centered Full View",
-    "image_count": 500,
-    "packages": [
-      "adobe_stock",
-      "metadata",
-      "white_jpeg_companion"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "alocasia",
-      "plant",
-      "greenery",
-      "foliage",
-      "leaf"
-    ]
-  },
-  {
-    "id": "plants_flowers_250_2026-09-29_001",
-    "date": "2026-09-29",
-    "title": "Fresh Monstera Centered Full View",
-    "image_count": 250,
-    "packages": [
-      "adobe_stock",
-      "metadata",
-      "white_jpeg_companion"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "monstera",
-      "greenery",
-      "foliage",
-      "leaf",
-      "indoor plant"
-    ]
-  },
-  {
-    "id": "fruit_isolates_2026-09-26_new",
-    "date": "2026-09-26",
-    "title": "Ripe red apple isolated on transparent background",
-    "image_count": 25,
+    "id": "test_set_2026-10-02_001",
+    "date": "2026-10-02",
+    "created_at": "2026-10-02 09:49",
+    "timestamp": 1790909387.0498688,
+    "title": "Test Set",
+    "image_count": 1,
     "packages": [
       "adobe_stock"
     ],
-    "has_csv": true,
+    "has_csv": false,
     "has_white_jpg": false,
     "has_transparent_png": true,
     "has_contact_sheet": false,
     "keywords_sample": []
-  },
-  {
-    "id": "flowers_200_2026-09-29",
-    "date": "2026-09-29",
-    "title": "Fresh Red Rose in Full Blossom",
-    "image_count": 200,
-    "packages": [
-      "adobe_stock",
-      "metadata",
-      "white_jpeg_companion"
-    ],
-    "has_csv": true,
-    "has_white_jpg": true,
-    "has_transparent_png": true,
-    "has_contact_sheet": true,
-    "keywords_sample": [
-      "rose",
-      "red rose",
-      "flower",
-      "bloom",
-      "petal"
-    ]
-  },
-  {
-    "id": "bread_isolates_2026-09-28_001",
-    "date": "2026-09-28",
-    "title": "Baguette bread long golden loaf with diagonal scoring isolated",
-    "image_count": 100,
-    "packages": [
-      "adobe_stock"
-    ],
-    "has_csv": true,
-    "has_white_jpg": false,
-    "has_transparent_png": true,
-    "has_contact_sheet": false,
-    "keywords_sample": [
-      "baguette bread",
-      "long golden loaf with diagonal scoring",
-      "bread",
-      "bakery",
-      "baked"
-    ]
   }
 ]
