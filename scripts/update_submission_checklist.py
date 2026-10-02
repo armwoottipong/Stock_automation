@@ -1,7 +1,7 @@
 """Generate and update the stock submission checklist HTML and JSON.
 
-This script scans output/ sets, compiles project records, generates a standalone
-HTML checklist with localStorage persistence, and optionally deploys/pushes to GitHub Pages.
+This script scans output/ sets, compiles project records, generates a minimal
+editorial HTML checklist with localStorage persistence, and optionally deploys/pushes to GitHub Pages.
 """
 
 from __future__ import annotations
@@ -117,7 +117,6 @@ def scan_output_sets(output_dir: Path) -> list[dict[str, Any]]:
                 image_count = len([f for f in as_dir.iterdir() if f.suffix.lower() in (".png", ".jpg", ".jpeg")])
 
         if not title:
-            # Clean human title from set_id
             clean_name = re.sub(r"_\d{4}-\d{2}-\d{2}(_\d+)?", "", set_id)
             title = clean_name.replace("_", " ").title()
 
@@ -143,7 +142,7 @@ def scan_output_sets(output_dir: Path) -> list[dict[str, Any]]:
 
 
 def build_checklist_html(projects: list[dict[str, Any]]) -> str:
-    """Generate the interactive HTML submission checklist with localStorage persistence."""
+    """Generate a clean, minimal editorial todo list checklist with localStorage persistence."""
     projects_json = json.dumps(projects, ensure_ascii=False, indent=2)
 
     return f"""<!DOCTYPE html>
@@ -151,569 +150,341 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stock Submission Checklist | Automation Hub</title>
+  <title>Stock Submission Checklist | Minimal Editorial</title>
   <style>
     :root {{
-      --bg-primary: #0b0f19;
-      --bg-secondary: #131d31;
-      --bg-card: #1c273e;
-      --bg-card-hover: #23314e;
-      --border-color: #2e3e60;
-      --border-focus: #3b82f6;
-      --text-main: #f1f5f9;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --accent-blue: #3b82f6;
-      --accent-indigo: #6366f1;
-      --accent-emerald: #10b981;
-      --accent-amber: #f59e0b;
-      --accent-rose: #f43f5e;
-      --accent-cyan: #06b6d4;
-      --badge-bg: rgba(59, 130, 246, 0.12);
-      --badge-text: #60a5fa;
-      --success-bg: rgba(16, 185, 129, 0.15);
-      --success-text: #34d399;
-      --warning-bg: rgba(245, 158, 11, 0.15);
-      --warning-text: #fbbf24;
-      --radius: 12px;
-      --radius-sm: 8px;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --bg: #faf9f6;
+      --surface: #ffffff;
+      --border: #e8e6e1;
+      --border-subtle: #f0eee9;
+      --text: #1a1b1e;
+      --text-muted: #74767e;
+      --text-dim: #9da0a8;
+      --accent: #111214;
+      --pill-checked-bg: #1c1d21;
+      --pill-checked-text: #ffffff;
+      --pill-unchecked-bg: #f4f3ef;
+      --pill-unchecked-text: #4a4c54;
+      --pill-border: #e2e0da;
+      --tag-bg: #eceae4;
+      --tag-text: #5c5e66;
+    }}
+
+    @media (prefers-color-scheme: dark) {{
+      :root {{
+        --bg: #0f1013;
+        --surface: #15171b;
+        --border: #23252b;
+        --border-subtle: #1b1d22;
+        --text: #edecee;
+        --text-muted: #8c8f99;
+        --text-dim: #5c5f69;
+        --accent: #f2f2f4;
+        --pill-checked-bg: #edecee;
+        --pill-checked-text: #111214;
+        --pill-unchecked-bg: #1a1c22;
+        --pill-unchecked-text: #a8abb6;
+        --pill-border: #292c34;
+        --tag-bg: #1e2027;
+        --tag-text: #8c8f99;
+      }}
     }}
 
     * {{
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }}
 
     body {{
-      background: var(--bg-primary);
-      color: var(--text-main);
-      min-height: 100vh;
-      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       line-height: 1.5;
+      padding: 40px 20px 80px;
+      -webkit-font-smoothing: antialiased;
     }}
 
     .container {{
-      max-width: 1400px;
+      max-width: 860px;
       margin: 0 auto;
     }}
 
-    /* Header */
+    /* Minimal Editorial Header */
     header {{
-      background: linear-gradient(135deg, #131d31 0%, #17243e 100%);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 28px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
       margin-bottom: 24px;
-      box-shadow: var(--shadow);
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
-      align-items: center;
-      gap: 20px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 16px;
     }}
 
-    .header-title-group h1 {{
-      font-size: 26px;
-      font-weight: 800;
+    .title-group h1 {{
+      font-family: "Newsreader", "Charter", "Georgia", "Iowan Old Style", serif;
+      font-size: 32px;
+      font-weight: 500;
       letter-spacing: -0.5px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: linear-gradient(to right, #60a5fa, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--text);
     }}
 
-    .header-title-group p {{
+    .title-group p {{
       color: var(--text-muted);
       font-size: 14px;
-      margin-top: 6px;
+      margin-top: 4px;
     }}
 
-    .header-actions {{
+    .header-links {{
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
+      align-items: center;
     }}
 
-    .btn {{
-      background: var(--bg-card);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      padding: 8px 16px;
+    .btn-link {{
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
       font-size: 13px;
-      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
       cursor: pointer;
+      text-decoration: none;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      gap: 6px;
+      transition: all 0.15s ease;
     }}
 
-    .btn:hover {{
-      background: var(--bg-card-hover);
-      border-color: var(--border-focus);
-      transform: translateY(-1px);
+    .btn-link:hover {{
+      border-color: var(--text-muted);
+      background: var(--surface);
     }}
 
-    .btn-primary {{
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-      border-color: #3b82f6;
-      color: #fff;
+    /* Minimal Controls */
+    .controls-bar {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
     }}
 
-    .btn-primary:hover {{
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    }}
-
-    .btn-success {{
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-      border-color: #10b981;
-      color: #fff;
-    }}
-
-    .btn-sm {{
-      padding: 4px 10px;
-      font-size: 12px;
-      border-radius: 6px;
-    }}
-
-    /* Metrics Bar */
-    .metrics-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    .filter-group {{
+      display: flex;
       gap: 16px;
-      margin-bottom: 24px;
+      font-size: 14px;
     }}
 
-    .metric-card {{
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 18px 20px;
+    .filter-item {{
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 2px 0;
+      font-size: 13px;
+      font-weight: 500;
       position: relative;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }}
 
-    .metric-card::before {{
+    .filter-item:hover {{
+      color: var(--text);
+    }}
+
+    .filter-item.active {{
+      color: var(--text);
+      font-weight: 600;
+    }}
+
+    .filter-item.active::after {{
       content: "";
       position: absolute;
-      top: 0;
+      bottom: -6px;
       left: 0;
-      width: 4px;
-      height: 100%;
-      background: var(--accent-blue);
+      width: 100%;
+      height: 1.5px;
+      background: var(--text);
     }}
 
-    .metric-card.adobe::before {{ background: #ff0000; }}
-    .metric-card.shutter::before {{ background: #f59e0b; }}
-    .metric-card.rf123::before {{ background: #06b6d4; }}
-    .metric-card.others::before {{ background: #8b5cf6; }}
-    .metric-card.total::before {{ background: #10b981; }}
+    .search-input {{
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      width: 200px;
+      transition: all 0.2s;
+    }}
 
-    .metric-label {{
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-muted);
+    .search-input:focus {{
+      border-color: var(--text-muted);
+      width: 240px;
+      background: var(--surface);
+    }}
+
+    /* Todo List */
+    .todo-list {{
+      display: flex;
+      flex-direction: column;
+    }}
+
+    .todo-row {{
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background 0.1s ease;
+    }}
+
+    .todo-row:last-child {{
+      border-bottom: none;
+    }}
+
+    .todo-meta-line {{
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
     }}
 
-    .metric-value {{
-      font-size: 26px;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-top: 6px;
+    .set-id {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }}
+
+    .set-id:hover {{
+      color: var(--text);
+      text-decoration: underline;
+    }}
+
+    .todo-title {{
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }}
+
+    .todo-row.all-done .todo-title {{
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }}
+
+    /* Minimal Checkbox Pills */
+    .platforms-checklist {{
       display: flex;
-      align-items: baseline;
-      gap: 6px;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
     }}
 
-    .metric-sub {{
+    .check-pill {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
       font-size: 12px;
       font-weight: 500;
-      color: var(--text-dim);
-    }}
-
-    .metric-bar-bg {{
-      width: 100%;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 999px;
-      margin-top: 10px;
-      overflow: hidden;
-    }}
-
-    .metric-bar-fill {{
-      height: 100%;
-      background: var(--accent-blue);
-      border-radius: 999px;
-      transition: width 0.4s ease;
-    }}
-
-    .metric-card.adobe .metric-bar-fill {{ background: #ef4444; }}
-    .metric-card.shutter .metric-bar-fill {{ background: #f59e0b; }}
-    .metric-card.rf123 .metric-bar-fill {{ background: #06b6d4; }}
-    .metric-card.others .metric-bar-fill {{ background: #8b5cf6; }}
-    .metric-card.total .metric-bar-fill {{ background: #10b981; }}
-
-    /* Filters & Controls */
-    .controls-panel {{
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-    }}
-
-    .search-box {{
-      position: relative;
-      flex: 1;
-      min-width: 260px;
-    }}
-
-    .search-box input {{
-      width: 100%;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      padding: 10px 14px 10px 38px;
-      font-size: 14px;
-      color: var(--text-main);
-      outline: none;
-      transition: border-color 0.2s;
-    }}
-
-    .search-box input:focus {{
-      border-color: var(--border-focus);
-    }}
-
-    .search-box svg {{
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      fill: var(--text-muted);
-    }}
-
-    .filter-tabs {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }}
-
-    .tab-btn {{
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-muted);
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }}
-
-    .tab-btn:hover {{
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.05);
-    }}
-
-    .tab-btn.active {{
-      background: var(--bg-card);
-      border-color: var(--border-color);
-      color: var(--badge-text);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }}
-
-    /* Projects Grid / List */
-    .projects-container {{
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }}
-
-    .project-card {{
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 22px;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }}
-
-    .project-card:hover {{
-      border-color: rgba(59, 130, 246, 0.4);
-      background: var(--bg-card);
-    }}
-
-    .project-header {{
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 16px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }}
-
-    .project-info {{
-      flex: 1;
-      min-width: 280px;
-    }}
-
-    .set-id-badge {{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 14px;
-      font-weight: 700;
-      color: #93c5fd;
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      padding: 3px 10px;
-      border-radius: 6px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-    }}
-
-    .set-id-badge:hover {{
-      background: rgba(59, 130, 246, 0.25);
-    }}
-
-    .project-title {{
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-top: 8px;
-    }}
-
-    .meta-pills {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }}
-
-    .pill {{
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text-muted);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }}
-
-    .pill.count {{
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border-color: rgba(16, 185, 129, 0.3);
-    }}
-
-    .pill.date {{
-      background: rgba(245, 158, 11, 0.12);
-      color: #fbbf24;
-      border-color: rgba(245, 158, 11, 0.25);
-    }}
-
-    .project-actions {{
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }}
-
-    /* Platforms Checklist Grid */
-    .checklist-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
-    }}
-
-    .platform-item {{
-      background: rgba(11, 15, 25, 0.5);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: all 0.2s ease;
-      position: relative;
-    }}
-
-    .platform-item.checked {{
-      background: rgba(16, 185, 129, 0.06);
-      border-color: rgba(16, 185, 129, 0.35);
-    }}
-
-    .platform-top {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }}
-
-    .platform-name {{
-      font-size: 14px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }}
-
-    .dot {{
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      display: inline-block;
-    }}
-
-    .dot.adobe {{ background: #ef4444; }}
-    .dot.shutter {{ background: #f59e0b; }}
-    .dot.rf123 {{ background: #06b6d4; }}
-    .dot.others {{ background: #8b5cf6; }}
-
-    .checkbox-label {{
-      display: flex;
-      align-items: center;
-      gap: 8px;
       cursor: pointer;
       user-select: none;
+      background: var(--pill-unchecked-bg);
+      color: var(--pill-unchecked-text);
+      border: 1px solid var(--pill-border);
+      transition: all 0.15s ease;
     }}
 
-    .custom-check {{
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--border-color);
-      border-radius: 5px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      background: var(--bg-card);
+    .check-pill:hover {{
+      border-color: var(--text-muted);
     }}
 
-    .platform-item.checked .custom-check {{
-      background: var(--accent-emerald);
-      border-color: var(--accent-emerald);
+    .check-pill.checked {{
+      background: var(--pill-checked-bg);
+      color: var(--pill-checked-text);
+      border-color: transparent;
+    }}
+
+    .check-pill input {{
+      display: none;
     }}
 
     .check-icon {{
-      display: none;
       width: 12px;
       height: 12px;
-      fill: #fff;
-    }}
-
-    .platform-item.checked .check-icon {{
-      display: block;
-    }}
-
-    .platform-status {{
-      font-size: 11px;
-      font-weight: 600;
-    }}
-
-    .status-text {{
-      color: var(--text-dim);
-    }}
-
-    .platform-item.checked .status-text {{
-      color: var(--accent-emerald);
-    }}
-
-    .submission-date-input {{
-      background: transparent;
-      border: 1px dashed var(--border-color);
-      border-radius: 4px;
-      color: var(--text-muted);
-      font-size: 11px;
-      padding: 3px 6px;
-      width: 100%;
-      outline: none;
-    }}
-
-    .submission-date-input:focus {{
-      border-color: var(--border-focus);
-      color: var(--text-main);
-    }}
-
-    .platform-hint {{
-      font-size: 11px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }}
-
-    .platform-name-input {{
-      background: transparent;
-      border: 1px dashed var(--border-color);
-      border-radius: 4px;
-      color: var(--text-main);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 6px;
-      width: 120px;
-    }}
-
-    /* Notes section */
-    .project-notes-box {{
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      stroke-width: 2.5;
+      stroke: currentColor;
+      fill: none;
       display: none;
     }}
 
-    .project-notes-box.open {{
+    .check-pill.checked .check-icon {{
+      display: inline-block;
+    }}
+
+    .sub-date {{
+      font-size: 11px;
+      opacity: 0.75;
+      margin-left: 2px;
+    }}
+
+    /* Notes Drawer / Toggle */
+    .row-footer {{
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }}
+
+    .row-btn {{
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-size: 11px;
+      cursor: pointer;
+      padding: 0;
+    }}
+
+    .row-btn:hover {{
+      color: var(--text);
+      text-decoration: underline;
+    }}
+
+    .row-notes {{
+      margin-top: 8px;
+      display: none;
+    }}
+
+    .row-notes.open {{
       display: block;
     }}
 
-    .notes-textarea {{
+    .notes-input {{
       width: 100%;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      color: var(--text-main);
-      font-size: 13px;
-      padding: 8px 12px;
-      resize: vertical;
-      min-height: 60px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--text);
       outline: none;
     }}
 
-    .notes-textarea:focus {{
-      border-color: var(--border-focus);
-    }}
-
-    /* Modal */
+    /* Settings Modal */
     .modal-overlay {{
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      z-index: 1000;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 100;
       justify-content: center;
       align-items: center;
       padding: 20px;
@@ -723,49 +494,88 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       display: flex;
     }}
 
-    .modal-card {{
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
+    .modal-box {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       width: 100%;
-      max-width: 500px;
+      max-width: 440px;
       padding: 24px;
-      box-shadow: var(--shadow);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
     }}
 
-    .modal-header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .modal-title {{
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }}
+
+    .modal-desc {{
+      font-size: 13px;
+      color: var(--text-muted);
       margin-bottom: 18px;
     }}
 
-    .modal-header h3 {{
-      font-size: 18px;
-      font-weight: 700;
+    .platform-tags {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
     }}
 
-    .form-group {{
-      margin-bottom: 14px;
-    }}
-
-    .form-group label {{
-      display: block;
+    .platform-tag {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 4px 10px;
+      border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
+      font-weight: 500;
     }}
 
-    .form-group input {{
-      width: 100%;
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      color: var(--text-main);
-      padding: 8px 12px;
-      font-size: 14px;
+    .remove-tag {{
+      cursor: pointer;
+      opacity: 0.6;
+      font-weight: bold;
+    }}
+
+    .remove-tag:hover {{
+      opacity: 1;
+    }}
+
+    .add-platform-form {{
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }}
+
+    .add-input {{
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 12px;
+      font-size: 13px;
+      color: var(--text);
       outline: none;
+    }}
+
+    .btn-add {{
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }}
+
+    .modal-actions {{
+      display: flex;
+      justify-content: flex-end;
     }}
 
     /* Toast */
@@ -773,254 +583,151 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--accent-emerald);
-      color: var(--text-main);
-      padding: 12px 20px;
-      border-radius: var(--radius-sm);
-      box-shadow: var(--shadow);
-      font-size: 13px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      transform: translateY(100px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
       opacity: 0;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 2000;
+      transform: translateY(12px);
+      transition: all 0.2s ease;
+      pointer-events: none;
     }}
 
     .toast.show {{
-      transform: translateY(0);
       opacity: 1;
-    }}
-
-    /* Empty state */
-    .empty-state {{
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--text-muted);
-      background: var(--bg-secondary);
-      border: 1px dashed var(--border-color);
-      border-radius: var(--radius);
-    }}
-
-    .empty-state h3 {{
-      font-size: 18px;
-      color: var(--text-main);
-      margin-bottom: 6px;
+      transform: translateY(0);
     }}
   </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Header -->
+  <!-- Minimal Header -->
   <header>
-    <div class="header-title-group">
-      <h1>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke: #38bdf8;">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>
-        Stock Submission Checklist
-      </h1>
-      <p>Automated stock pipeline submission tracker with persistent local storage for Adobe Stock, Shutterstock, 123RF &amp; agencies.</p>
+    <div class="title-group">
+      <h1>Stock Submissions</h1>
+      <p id="statusCounter">7 projects · microstock dispatch checklist</p>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" onclick="openAddModal()">
-        <span>+ Add Set Manually</span>
-      </button>
-      <button class="btn" onclick="exportData()">
-        <span>💾 Export Status (JSON)</span>
-      </button>
-      <button class="btn" onclick="document.getElementById('importFile').click()">
-        <span>📥 Import Backup</span>
-      </button>
-      <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importData(event)">
-      <a href="https://github.com/armwoottipong/Stock_automation" target="_blank" class="btn">
-        <span>GitHub Repo</span>
-      </a>
+    <div class="header-links">
+      <button class="btn-link" onclick="openSettings()">⚙ Platforms</button>
+      <button class="btn-link" onclick="exportData()">💾 Backup</button>
+      <a href="https://github.com/armwoottipong/Stock_automation" target="_blank" class="btn-link">GitHub</a>
     </div>
   </header>
 
-  <!-- Metrics Bar -->
-  <div class="metrics-grid">
-    <div class="metric-card total">
-      <div class="metric-label">
-        <span>Total Projects</span>
-        <span id="metricTotalAssets">0 Assets</span>
-      </div>
-      <div class="metric-value">
-        <span id="metricTotalSets">0</span>
-        <span class="metric-sub">sets</span>
-      </div>
-      <div class="metric-bar-bg"><div class="metric-bar-fill" id="barOverall" style="width: 0%;"></div></div>
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div class="filter-group">
+      <button class="filter-item active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-item" onclick="setFilter('pending', this)">Pending</button>
+      <button class="filter-item" onclick="setFilter('completed', this)">Completed</button>
     </div>
-
-    <div class="metric-card adobe">
-      <div class="metric-label">
-        <span>Adobe Stock</span>
-        <span id="metricAdobePercent">0%</span>
-      </div>
-      <div class="metric-value">
-        <span id="metricAdobeCount">0</span>
-        <span class="metric-sub" id="metricAdobeSub">/ 0 submitted</span>
-      </div>
-      <div class="metric-bar-bg"><div class="metric-bar-fill" id="barAdobe" style="width: 0%;"></div></div>
-    </div>
-
-    <div class="metric-card shutter">
-      <div class="metric-label">
-        <span>Shutterstock</span>
-        <span id="metricShutterPercent">0%</span>
-      </div>
-      <div class="metric-value">
-        <span id="metricShutterCount">0</span>
-        <span class="metric-sub" id="metricShutterSub">/ 0 submitted</span>
-      </div>
-      <div class="metric-bar-bg"><div class="metric-bar-fill" id="barShutter" style="width: 0%;"></div></div>
-    </div>
-
-    <div class="metric-card rf123">
-      <div class="metric-label">
-        <span>123RF</span>
-        <span id="metric123rfPercent">0%</span>
-      </div>
-      <div class="metric-value">
-        <span id="metric123rfCount">0</span>
-        <span class="metric-sub" id="metric123rfSub">/ 0 submitted</span>
-      </div>
-      <div class="metric-bar-bg"><div class="metric-bar-fill" id="bar123rf" style="width: 0%;"></div></div>
-    </div>
-
-    <div class="metric-card others">
-      <div class="metric-label">
-        <span>Others (อื่นๆ)</span>
-        <span id="metricOthersPercent">0%</span>
-      </div>
-      <div class="metric-value">
-        <span id="metricOthersCount">0</span>
-        <span class="metric-sub" id="metricOthersSub">/ 0 submitted</span>
-      </div>
-      <div class="metric-bar-bg"><div class="metric-bar-fill" id="barOthers" style="width: 0%;"></div></div>
-    </div>
+    <input type="text" class="search-input" id="searchInput" placeholder="Search projects..." oninput="handleSearch()">
   </div>
 
-  <!-- Filters & Controls -->
-  <div class="controls-panel">
-    <div class="search-box">
-      <svg viewBox="0 0 24 24"><path d="M21.71 20.29l-5.4-5.4A8.93 8.93 0 0 0 18 10a9 9 0 1 0-9 9 8.93 8.93 0 0 0 4.89-1.31l5.4 5.4a1 1 0 0 0 1.42 0 1 1 0 0 0 0-1.4zM4 10a7 7 0 1 1 7 7 7 7 0 0 1-7-7z"/></svg>
-      <input type="text" id="searchInput" placeholder="Search by Set ID, subject, title, or notes..." oninput="handleSearch()">
-    </div>
-
-    <div class="filter-tabs">
-      <button class="tab-btn active" onclick="setFilter('all', this)">All Projects</button>
-      <button class="tab-btn" onclick="setFilter('pending_any', this)">⏳ Pending Submission</button>
-      <button class="tab-btn" onclick="setFilter('fully_done', this)">✅ Fully Completed</button>
-      <button class="tab-btn" onclick="setFilter('pending_adobe', this)">Adobe Pending</button>
-      <button class="tab-btn" onclick="setFilter('pending_shutter', this)">Shutterstock Pending</button>
-      <button class="tab-btn" onclick="setFilter('pending_123rf', this)">123RF Pending</button>
-      <button class="tab-btn" onclick="setFilter('pending_others', this)">Others Pending</button>
-    </div>
-  </div>
-
-  <!-- Projects List -->
-  <div class="projects-container" id="projectsContainer">
-    <!-- Populated by JS -->
+  <!-- Todo List -->
+  <div class="todo-list" id="todoList">
+    <!-- Populated by JavaScript -->
   </div>
 </div>
 
-<!-- Modal: Add Custom Project -->
-<div class="modal-overlay" id="addModal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <h3>Add New Project to Checklist</h3>
-      <button class="btn btn-sm" onclick="closeAddModal()">✕</button>
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" onclick="handleOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-title">Tracked Agencies</div>
+    <div class="modal-desc">Configure platforms tracked on your submission checklist.</div>
+
+    <div class="platform-tags" id="platformTagsList">
+      <!-- Tag chips populated by JS -->
     </div>
-    <form id="addProjectForm" onsubmit="handleAddProject(event)">
-      <div class="form-group">
-        <label>Set ID (e.g. coffee_beans_500_2026-10-02_001)</label>
-        <input type="text" id="newSetId" required placeholder="unique_set_id">
-      </div>
-      <div class="form-group">
-        <label>Project Title / Description</label>
-        <input type="text" id="newTitle" required placeholder="Roasted coffee beans isolated on white">
-      </div>
-      <div class="form-group">
-        <label>Date (YYYY-MM-DD)</label>
-        <input type="date" id="newDate">
-      </div>
-      <div class="form-group">
-        <label>Total Asset Count</label>
-        <input type="number" id="newCount" value="100" min="1">
-      </div>
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:20px;">
-        <button type="button" class="btn" onclick="closeAddModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Add Project</button>
-      </div>
+
+    <form class="add-platform-form" onsubmit="handleAddPlatform(event)">
+      <input type="text" class="add-input" id="newPlatformInput" placeholder="Add agency (e.g. Freepik, Vecteezy, Others)" required>
+      <button type="submit" class="btn-add">+ Add</button>
     </form>
+
+    <div class="modal-actions">
+      <button class="btn-link" onclick="closeSettings()">Done</button>
+    </div>
   </div>
 </div>
 
-<!-- Toast notification -->
-<div class="toast" id="toast">
-  <span>✓</span>
-  <span id="toastMsg">Status updated and saved to local storage</span>
-</div>
+<div class="toast" id="toast">Saved to local storage</div>
 
 <script>
-  // Initial embedded roster of projects generated by pipeline
+  // Initial projects embedded by pipeline
   const INITIAL_PROJECTS = {projects_json};
 
+  // Default initial agencies: Adobe Stock, Shutterstock, 123RF
+  const DEFAULT_PLATFORMS = ["Adobe Stock", "Shutterstock", "123RF"];
+
+  // LocalStorage keys
   const STORAGE_KEY = "stock_submission_checklist_v1";
+  const PLATFORMS_KEY = "stock_configured_platforms_v1";
 
   let appState = {{
     projects: [],
+    platforms: [...DEFAULT_PLATFORMS],
     submissions: {{}},
     currentFilter: "all",
     searchQuery: ""
   }};
 
-  // Initialize
   function initApp() {{
-    loadStorage();
+    loadPlatforms();
+    loadSubmissions();
     mergeProjects(INITIAL_PROJECTS);
-    tryFetchLatestProjects();
+    tryFetchProjects();
     renderApp();
   }}
 
-  // Load from browser localStorage
-  function loadStorage() {{
+  function loadPlatforms() {{
+    try {{
+      const raw = localStorage.getItem(PLATFORMS_KEY);
+      if (raw) {{
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {{
+          appState.platforms = parsed;
+        }}
+      }}
+    }} catch (e) {{
+      console.error(e);
+    }}
+  }}
+
+  function savePlatforms() {{
+    try {{
+      localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
+      showToast("Agencies updated");
+    }} catch (e) {{
+      console.error(e);
+    }}
+  }}
+
+  function loadSubmissions() {{
     try {{
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {{
         const parsed = JSON.parse(raw);
-        appState.submissions = parsed.submissions || {{}};
-        if (Array.isArray(parsed.custom_projects)) {{
-          mergeProjects(parsed.custom_projects);
-        }}
+        appState.submissions = parsed.submissions || parsed || {{}};
       }}
     }} catch (e) {{
-      console.error("Failed to parse localStorage", e);
+      console.error(e);
     }}
   }}
 
-  // Save to browser localStorage
-  function saveStorage() {{
+  function saveSubmissions() {{
     try {{
-      const customProjects = appState.projects.filter(p => p.is_custom);
-      const dataToSave = {{
-        version: 1,
-        last_updated: new Date().toISOString(),
-        submissions: appState.submissions,
-        custom_projects: customProjects
-      }};
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({{
+        version: 2,
+        submissions: appState.submissions
+      }}));
       showToast("Saved to local storage");
     }} catch (e) {{
-      console.error("Failed to save to localStorage", e);
+      console.error(e);
     }}
   }}
 
@@ -1033,441 +740,198 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       }} else {{
         Object.assign(exists, item);
       }}
-      // Ensure submissions entry exists
       if (!appState.submissions[item.id]) {{
-        appState.submissions[item.id] = {{
-          adobe_stock: {{ submitted: false, date: "" }},
-          shutterstock: {{ submitted: false, date: "" }},
-          "123rf": {{ submitted: false, date: "" }},
-          others: {{ submitted: false, name: "Freepik / Vecteezy", date: "" }},
-          notes: ""
-        }};
+        appState.submissions[item.id] = {{ checks: {{}}, notes: "" }};
       }}
     }});
   }}
 
-  // Try to fetch projects.json if served via web/GitHub Pages
-  async function tryFetchLatestProjects() {{
+  async function tryFetchProjects() {{
     try {{
       const res = await fetch("projects.json");
       if (res.ok) {{
-        const remoteProjects = await res.json();
-        mergeProjects(remoteProjects);
+        const data = await res.json();
+        mergeProjects(data);
         renderApp();
       }}
-    }} catch (e) {{
-      // Offline file:/// mode, safely ignore
-    }}
+    }} catch (e) {{}}
   }}
 
-  // Get current timestamp format: YYYY-MM-DD HH:mm
-  function getCurrentTimestamp() {{
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mm = String(now.getMinutes()).padStart(2, "0");
-    return `${{y}}-${{m}}-${{d}} ${{hh}}:${{mm}}`;
-  }}
-
-  // Toggle platform submission
   function togglePlatform(setId, platform) {{
-    if (!appState.submissions[setId]) return;
-    const item = appState.submissions[setId][platform];
-    item.submitted = !item.submitted;
-    if (item.submitted && !item.date) {{
-      item.date = getCurrentTimestamp();
-    }} else if (!item.submitted) {{
-      item.date = "";
+    if (!appState.submissions[setId]) {{
+      appState.submissions[setId] = {{ checks: {{}}, notes: "" }};
     }}
-    saveStorage();
+    const checks = appState.submissions[setId].checks || {{}};
+    const cur = checks[platform] || {{ submitted: false, date: "" }};
+    
+    if (cur.submitted) {{
+      checks[platform] = {{ submitted: false, date: "" }};
+    }} else {{
+      const now = new Date();
+      const dateStr = `${{now.getMonth() + 1}}/${{now.getDate()}}`;
+      checks[platform] = {{ submitted: true, date: dateStr }};
+    }}
+    appState.submissions[setId].checks = checks;
+    saveSubmissions();
     renderApp();
   }}
 
-  // Change submission date
-  function updateDate(setId, platform, value) {{
-    if (!appState.submissions[setId]) return;
-    appState.submissions[setId][platform].date = value;
-    saveStorage();
-    renderMetrics();
+  function isSetComplete(setId) {{
+    const checks = (appState.submissions[setId] && appState.submissions[setId].checks) || {{}};
+    return appState.platforms.length > 0 && appState.platforms.every(p => checks[p] && checks[p].submitted);
   }}
 
-  // Change custom others platform name
-  function updateOthersName(setId, value) {{
-    if (!appState.submissions[setId]) return;
-    appState.submissions[setId].others.name = value;
-    saveStorage();
-  }}
-
-  // Update notes
-  function updateNotes(setId, value) {{
-    if (!appState.submissions[setId]) return;
-    appState.submissions[setId].notes = value;
-    saveStorage();
-  }}
-
-  function toggleNotesBox(setId) {{
-    const el = document.getElementById(`notesBox_${{setId}}`);
+  function toggleNotes(setId) {{
+    const el = document.getElementById(`notes_${{setId}}`);
     if (el) el.classList.toggle("open");
   }}
 
-  // Mark all platforms submitted for a project
-  function markAllSubmitted(setId) {{
-    if (!appState.submissions[setId]) return;
-    const now = getCurrentTimestamp();
-    ["adobe_stock", "shutterstock", "123rf", "others"].forEach(plat => {{
-      appState.submissions[setId][plat].submitted = true;
-      if (!appState.submissions[setId][plat].date) {{
-        appState.submissions[setId][plat].date = now;
-      }}
-    }});
-    saveStorage();
-    renderApp();
+  function updateNotes(setId, val) {{
+    if (!appState.submissions[setId]) appState.submissions[setId] = {{ checks: {{}}, notes: "" }};
+    appState.submissions[setId].notes = val;
+    saveSubmissions();
   }}
 
-  // Reset status for a project
-  function resetProjectStatus(setId) {{
-    if (!appState.submissions[setId]) return;
-    if (!confirm(`Reset submission status for set ${{setId}}?`)) return;
-    ["adobe_stock", "shutterstock", "123rf", "others"].forEach(plat => {{
-      appState.submissions[setId][plat].submitted = false;
-      appState.submissions[setId][plat].date = "";
-    }});
-    saveStorage();
-    renderApp();
-  }}
-
-  // Copy set ID to clipboard
   function copySetId(setId) {{
     navigator.clipboard.writeText(setId).then(() => {{
-      showToast(`Copied ${{setId}} to clipboard`);
-    }}).catch(() => {{
-      showToast(`Set ID: ${{setId}}`);
-    }});
+      showToast(`Copied ${{setId}}`);
+    }}).catch(() => {{}});
   }}
 
-  // Toast
-  function showToast(msg) {{
-    const toast = document.getElementById("toast");
-    const toastMsg = document.getElementById("toastMsg");
-    toastMsg.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2500);
+  function setFilter(type, btn) {{
+    appState.currentFilter = type;
+    document.querySelectorAll(".filter-item").forEach(b => b.classList.remove("active"));
+    if (btn) btn.classList.add("active");
+    renderList();
   }}
 
-  // Search & Filter
   function handleSearch() {{
     appState.searchQuery = document.getElementById("searchInput").value.trim().toLowerCase();
-    renderProjectsList();
+    renderList();
   }}
 
-  function setFilter(filterName, btnEl) {{
-    appState.currentFilter = filterName;
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    if (btnEl) btnEl.classList.add("active");
-    renderProjectsList();
+  // Settings Modal Functions
+  function openSettings() {{
+    renderPlatformTags();
+    document.getElementById("settingsModal").classList.add("open");
   }}
 
-  // Add custom project
-  function openAddModal() {{
-    document.getElementById("newDate").value = new Date().toISOString().split("T")[0];
-    document.getElementById("addModal").classList.add("open");
+  function closeSettings() {{
+    document.getElementById("settingsModal").classList.remove("open");
   }}
 
-  function closeAddModal() {{
-    document.getElementById("addModal").classList.remove("open");
+  function handleOverlayClick(e) {{
+    if (e.target.id === "settingsModal") closeSettings();
   }}
 
-  function handleAddProject(e) {{
+  function renderPlatformTags() {{
+    const list = document.getElementById("platformTagsList");
+    list.innerHTML = appState.platforms.map((plat, idx) => `
+      <div class="platform-tag">
+        <span>${{plat}}</span>
+        ${{appState.platforms.length > 1 ? `<span class="remove-tag" onclick="removePlatform(${{idx}})">✕</span>` : ''}}
+      </div>
+    `).join("");
+  }}
+
+  function handleAddPlatform(e) {{
     e.preventDefault();
-    const setId = document.getElementById("newSetId").value.trim();
-    const title = document.getElementById("newTitle").value.trim();
-    const date = document.getElementById("newDate").value;
-    const count = parseInt(document.getElementById("newCount").value, 10) || 100;
-
-    if (!setId) return;
-
-    const newProject = {{
-      id: setId,
-      title: title,
-      date: date,
-      image_count: count,
-      packages: ["adobe_stock"],
-      has_csv: true,
-      has_white_jpg: true,
-      has_transparent_png: true,
-      is_custom: true
-    }};
-
-    mergeProjects([newProject]);
-    saveStorage();
-    closeAddModal();
-    renderApp();
-    showToast(`Added new project ${{setId}}`);
+    const input = document.getElementById("newPlatformInput");
+    const name = input.value.trim();
+    if (name && !appState.platforms.includes(name)) {{
+      appState.platforms.push(name);
+      savePlatforms();
+      renderPlatformTags();
+      renderApp();
+      input.value = "";
+    }}
   }}
 
-  // Export / Import
+  function removePlatform(idx) {{
+    appState.platforms.splice(idx, 1);
+    savePlatforms();
+    renderPlatformTags();
+    renderApp();
+  }}
+
   function exportData() {{
-    const customProjects = appState.projects.filter(p => p.is_custom);
-    const dataToExport = {{
-      version: 1,
+    const data = {{
+      version: 2,
       exported_at: new Date().toISOString(),
-      submissions: appState.submissions,
-      custom_projects: customProjects
+      platforms: appState.platforms,
+      submissions: appState.submissions
     }};
-    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {{ type: "application/json" }});
+    const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: "application/json" }});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `stock_submission_backup_${{new Date().toISOString().split("T")[0]}}.json`;
+    a.download = `stock_checklist_backup.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast("Downloaded checklist backup JSON");
+    showToast("Downloaded backup JSON");
   }}
 
-  function importData(e) {{
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(event) {{
-      try {{
-        const imported = JSON.parse(event.target.result);
-        if (imported.submissions) {{
-          appState.submissions = Object.assign(appState.submissions, imported.submissions);
-        }}
-        if (Array.isArray(imported.custom_projects)) {{
-          mergeProjects(imported.custom_projects);
-        }}
-        saveStorage();
-        renderApp();
-        showToast("Backup restored successfully!");
-      }} catch (err) {{
-        alert("Invalid JSON backup file");
-      }}
-    }};
-    reader.readAsText(file);
-    e.target.value = "";
+  function showToast(msg) {{
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2000);
   }}
 
-  // Render Metrics
-  function renderMetrics() {{
-    const totalSets = appState.projects.length;
-    let totalAssets = 0;
-    let adobeCount = 0;
-    let shutterCount = 0;
-    let rf123Count = 0;
-    let othersCount = 0;
-
-    appState.projects.forEach(p => {{
-      totalAssets += p.image_count || 0;
-      const sub = appState.submissions[p.id] || {{}};
-      if (sub.adobe_stock && sub.adobe_stock.submitted) adobeCount++;
-      if (sub.shutterstock && sub.shutterstock.submitted) shutterCount++;
-      if (sub["123rf"] && sub["123rf"].submitted) rf123Count++;
-      if (sub.others && sub.others.submitted) othersCount++;
-    }});
-
-    document.getElementById("metricTotalSets").textContent = totalSets;
-    document.getElementById("metricTotalAssets").textContent = `${{totalAssets.toLocaleString()}} Assets`;
-
-    const calcPct = (cnt) => totalSets > 0 ? Math.round((cnt / totalSets) * 100) : 0;
-
-    const adobePct = calcPct(adobeCount);
-    document.getElementById("metricAdobeCount").textContent = adobeCount;
-    document.getElementById("metricAdobeSub").textContent = `/ ${{totalSets}} submitted`;
-    document.getElementById("metricAdobePercent").textContent = `${{adobePct}}%`;
-    document.getElementById("barAdobe").style.width = `${{adobePct}}%`;
-
-    const shutterPct = calcPct(shutterCount);
-    document.getElementById("metricShutterCount").textContent = shutterCount;
-    document.getElementById("metricShutterSub").textContent = `/ ${{totalSets}} submitted`;
-    document.getElementById("metricShutterPercent").textContent = `${{shutterPct}}%`;
-    document.getElementById("barShutter").style.width = `${{shutterPct}}%`;
-
-    const rf123Pct = calcPct(rf123Count);
-    document.getElementById("metric123rfCount").textContent = rf123Count;
-    document.getElementById("metric123rfSub").textContent = `/ ${{totalSets}} submitted`;
-    document.getElementById("metric123rfPercent").textContent = `${{rf123Pct}}%`;
-    document.getElementById("bar123rf").style.width = `${{rf123Pct}}%`;
-
-    const othersPct = calcPct(othersCount);
-    document.getElementById("metricOthersCount").textContent = othersCount;
-    document.getElementById("metricOthersSub").textContent = `/ ${{totalSets}} submitted`;
-    document.getElementById("metricOthersPercent").textContent = `${{othersPct}}%`;
-    document.getElementById("barOthers").style.width = `${{othersPct}}%`;
-
-    const overallPct = totalSets > 0 ? Math.round(((adobeCount + shutterCount + rf123Count + othersCount) / (totalSets * 4)) * 100) : 0;
-    document.getElementById("barOverall").style.width = `${{overallPct}}%`;
-  }}
-
-  // Filter check logic
-  function matchFilter(project) {{
-    const sub = appState.submissions[project.id] || {{}};
-    const isAdobe = sub.adobe_stock && sub.adobe_stock.submitted;
-    const isShutter = sub.shutterstock && sub.shutterstock.submitted;
-    const is123rf = sub["123rf"] && sub["123rf"].submitted;
-    const isOthers = sub.others && sub.others.submitted;
-
-    if (appState.currentFilter === "all") return true;
-    if (appState.currentFilter === "fully_done") return isAdobe && isShutter && is123rf && isOthers;
-    if (appState.currentFilter === "pending_any") return !(isAdobe && isShutter && is123rf && isOthers);
-    if (appState.currentFilter === "pending_adobe") return !isAdobe;
-    if (appState.currentFilter === "pending_shutter") return !isShutter;
-    if (appState.currentFilter === "pending_123rf") return !is123rf;
-    if (appState.currentFilter === "pending_others") return !isOthers;
-    return true;
-  }}
-
-  // Render Projects List
-  function renderProjectsList() {{
-    const container = document.getElementById("projectsContainer");
+  function renderList() {{
+    const container = document.getElementById("todoList");
     const q = appState.searchQuery;
 
     const filtered = appState.projects.filter(p => {{
       const sub = appState.submissions[p.id] || {{}};
-      const notes = (sub.notes || "").toLowerCase();
-      const text = `${{p.id}} ${{p.title}} ${{p.date}} ${{notes}}`.toLowerCase();
+      const complete = isSetComplete(p.id);
+      const text = `${{p.id}} ${{p.title}} ${{sub.notes || ''}}`.toLowerCase();
       const matchesSearch = !q || text.includes(q);
-      const matchesFilter = matchFilter(p);
-      return matchesSearch && matchesFilter;
+
+      if (!matchesSearch) return false;
+      if (appState.currentFilter === "pending") return !complete;
+      if (appState.currentFilter === "completed") return complete;
+      return true;
     }});
 
     if (filtered.length === 0) {{
-      container.innerHTML = `
-        <div class="empty-state">
-          <h3>No matching stock projects found</h3>
-          <p>Try modifying your search or filter settings, or add a new project above.</p>
-        </div>
-      `;
+      container.innerHTML = `<div style="padding:40px 0; color:var(--text-muted); font-size:14px;">No matching stock sets found.</div>`;
       return;
     }}
 
     container.innerHTML = filtered.map(p => {{
-      const sub = appState.submissions[p.id] || {{}};
-      const adobe = sub.adobe_stock || {{ submitted: false, date: "" }};
-      const shutter = sub.shutterstock || {{ submitted: false, date: "" }};
-      const rf123 = sub["123rf"] || {{ submitted: false, date: "" }};
-      const others = sub.others || {{ submitted: false, name: "Freepik / Vecteezy", date: "" }};
-      const notes = sub.notes || "";
+      const sub = appState.submissions[p.id] || {{ checks: {{}}, notes: "" }};
+      const checks = sub.checks || {{}};
+      const complete = isSetComplete(p.id);
 
       return `
-        <div class="project-card" id="card_${{p.id}}">
-          <div class="project-header">
-            <div class="project-info">
-              <span class="set-id-badge" onclick="copySetId('${{p.id}}')" title="Click to copy set ID">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                ${{p.id}}
-              </span>
-              <div class="project-title">${{p.title}}</div>
-              <div class="meta-pills">
-                <span class="pill count">📊 ${{p.image_count}} Items</span>
-                <span class="pill date">📅 ${{p.date}}</span>
-                ${{p.has_transparent_png ? '<span class="pill">PNG Cutout</span>' : ''}}
-                ${{p.has_white_jpg ? '<span class="pill">White JPEG</span>' : ''}}
-                ${{p.has_csv ? '<span class="pill">CSV Catalog</span>' : ''}}
-              </div>
-            </div>
-
-            <div class="project-actions">
-              <button class="btn btn-sm btn-success" onclick="markAllSubmitted('${{p.id}}')" title="Mark all platforms as submitted">
-                ✓ All Done
-              </button>
-              <button class="btn btn-sm" onclick="toggleNotesBox('${{p.id}}')">
-                📝 Notes
-              </button>
-              <button class="btn btn-sm" onclick="resetProjectStatus('${{p.id}}')" title="Reset platform checkmarks">
-                ↺ Reset
-              </button>
-            </div>
+        <div class="todo-row ${{complete ? 'all-done' : ''}}">
+          <div class="todo-meta-line">
+            <span class="set-id" onclick="copySetId('${{p.id}}')" title="Click to copy set ID">${{p.id}}</span>
+            <span>${{p.image_count}} assets · ${{p.date}}</span>
           </div>
 
-          <!-- Platforms Checklist Grid -->
-          <div class="checklist-grid">
-            <!-- Adobe Stock -->
-            <div class="platform-item ${{adobe.submitted ? 'checked' : ''}}">
-              <div class="platform-top">
-                <div class="platform-name">
-                  <span class="dot adobe"></span>
-                  Adobe Stock
-                </div>
-                <div class="checkbox-label" onclick="togglePlatform('${{p.id}}', 'adobe_stock')">
-                  <div class="custom-check">
-                    <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                  </div>
-                </div>
-              </div>
-              <div class="platform-status">
-                <span class="status-text">${{adobe.submitted ? '✓ Submitted' : '○ Not Submitted'}}</span>
-              </div>
-              <input type="text" class="submission-date-input" placeholder="Date: YYYY-MM-DD HH:mm" value="${{adobe.date || ''}}" onchange="updateDate('${{p.id}}', 'adobe_stock', this.value)">
-              <div class="platform-hint">⚠️ Generative AI checkbox required</div>
-            </div>
+          <div class="todo-title">${{p.title}}</div>
 
-            <!-- Shutterstock -->
-            <div class="platform-item ${{shutter.submitted ? 'checked' : ''}}">
-              <div class="platform-top">
-                <div class="platform-name">
-                  <span class="dot shutter"></span>
-                  Shutterstock
+          <div class="platforms-checklist">
+            ${{appState.platforms.map(plat => {{
+              const item = checks[plat] || {{ submitted: false, date: "" }};
+              return `
+                <div class="check-pill ${{item.submitted ? 'checked' : ''}}" onclick="togglePlatform('${{p.id}}', '${{plat}}')">
+                  <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>${{plat}}</span>
+                  ${{item.submitted && item.date ? `<span class="sub-date">(${{item.date}})</span>` : ''}}
                 </div>
-                <div class="checkbox-label" onclick="togglePlatform('${{p.id}}', 'shutterstock')">
-                  <div class="custom-check">
-                    <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                  </div>
-                </div>
-              </div>
-              <div class="platform-status">
-                <span class="status-text">${{shutter.submitted ? '✓ Submitted' : '○ Not Submitted'}}</span>
-              </div>
-              <input type="text" class="submission-date-input" placeholder="Date: YYYY-MM-DD HH:mm" value="${{shutter.date || ''}}" onchange="updateDate('${{p.id}}', 'shutterstock', this.value)">
-              <div class="platform-hint">ℹ️ Camera photo / policy check</div>
-            </div>
-
-            <!-- 123RF -->
-            <div class="platform-item ${{rf123.submitted ? 'checked' : ''}}">
-              <div class="platform-top">
-                <div class="platform-name">
-                  <span class="dot rf123"></span>
-                  123RF
-                </div>
-                <div class="checkbox-label" onclick="togglePlatform('${{p.id}}', '123rf')">
-                  <div class="custom-check">
-                    <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                  </div>
-                </div>
-              </div>
-              <div class="platform-status">
-                <span class="status-text">${{rf123.submitted ? '✓ Submitted' : '○ Not Submitted'}}</span>
-              </div>
-              <input type="text" class="submission-date-input" placeholder="Date: YYYY-MM-DD HH:mm" value="${{rf123.date || ''}}" onchange="updateDate('${{p.id}}', '123rf', this.value)">
-              <div class="platform-hint">Standard contributor batch</div>
-            </div>
-
-            <!-- Others -->
-            <div class="platform-item ${{others.submitted ? 'checked' : ''}}">
-              <div class="platform-top">
-                <div class="platform-name">
-                  <span class="dot others"></span>
-                  <input type="text" class="platform-name-input" value="${{others.name || 'Freepik'}}" onchange="updateOthersName('${{p.id}}', this.value)" title="Click to rename agency">
-                </div>
-                <div class="checkbox-label" onclick="togglePlatform('${{p.id}}', 'others')">
-                  <div class="custom-check">
-                    <svg class="check-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-                  </div>
-                </div>
-              </div>
-              <div class="platform-status">
-                <span class="status-text">${{others.submitted ? '✓ Submitted' : '○ Not Submitted'}}</span>
-              </div>
-              <input type="text" class="submission-date-input" placeholder="Date: YYYY-MM-DD HH:mm" value="${{others.date || ''}}" onchange="updateDate('${{p.id}}', 'others', this.value)">
-              <div class="platform-hint">Other stock portals</div>
-            </div>
+              `;
+            }}).join("")}}
           </div>
 
-          <!-- Notes Area -->
-          <div class="project-notes-box ${{notes ? 'open' : ''}}" id="notesBox_${{p.id}}">
-            <textarea class="notes-textarea" placeholder="Add submission notes (e.g. batch ID, FTP submission date, acceptance details)..." onchange="updateNotes('${{p.id}}', this.value)">${{notes}}</textarea>
+          <div class="row-footer">
+            <button class="row-btn" onclick="toggleNotes('${{p.id}}')">${{sub.notes ? 'Edit note' : '+ Add note'}}</button>
+          </div>
+
+          <div class="row-notes ${{sub.notes ? 'open' : ''}}" id="notes_${{p.id}}">
+            <input type="text" class="notes-input" placeholder="Add note (batch number, acceptance, etc)..." value="${{sub.notes || ''}}" onchange="updateNotes('${{p.id}}', this.value)">
           </div>
         </div>
       `;
@@ -1475,11 +939,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   }}
 
   function renderApp() {{
-    renderMetrics();
-    renderProjectsList();
+    const total = appState.projects.length;
+    const completed = appState.projects.filter(p => isSetComplete(p.id)).length;
+    const pending = total - completed;
+    document.getElementById("statusCounter").textContent = `${{total}} sets · ${{pending}} pending · ${{completed}} completed`;
+    renderList();
   }}
 
-  // Start on load
   document.addEventListener("DOMContentLoaded", initApp);
 </script>
 </body>
@@ -1502,7 +968,7 @@ def update_checklist(
 
     projects = scan_output_sets(out_path)
 
-    # If specific set_id provided and not found in scan (e.g. still in progress), add placeholder
+    # If specific set_id provided and not found in scan, add placeholder
     if set_id and not any(p["id"] == set_id for p in projects):
         projects.insert(0, {
             "id": set_id,
@@ -1542,7 +1008,6 @@ def update_checklist(
             print("\nDeploying checklist to GitHub Pages (git push)...", flush=True)
             subprocess.run(["git", "add", "docs/", ".github/", "index.html", "projects.json"], cwd=ROOT, check=True)
             commit_msg = f"Update stock submission checklist ({len(projects)} sets)"
-            # Check if there are staged changes
             res_diff = subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=ROOT)
             if res_diff.returncode != 0:
                 subprocess.run(["git", "commit", "-m", commit_msg], cwd=ROOT, check=True)
