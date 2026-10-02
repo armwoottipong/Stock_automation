@@ -52,6 +52,16 @@ def package_set(set_id: str, packages: list[Path], output: Path) -> Path:
         if destination.exists():
             raise FileExistsError(f"Refusing to overwrite {destination}")
         pending.rename(destination)
+
+    # Automatically update submission checklist when packaging into standard output
+    try:
+        project_root = Path(__file__).resolve().parents[1]
+        if output.resolve() == (project_root / "output").resolve():
+            from scripts.update_submission_checklist import update_checklist
+            update_checklist(output_dir=output, set_id=set_id, verbose=False)
+    except Exception:
+        pass
+
     return destination
 
 
@@ -60,8 +70,16 @@ def main() -> int:
     parser.add_argument("--set-id", required=True)
     parser.add_argument("--packages", type=Path, nargs="+", required=True)
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "output")
+    parser.add_argument("--push", action="store_true", help="Deploy updated checklist to GitHub Pages")
     args = parser.parse_args()
-    print(package_set(args.set_id, args.packages, args.output))
+    dest = package_set(args.set_id, args.packages, args.output)
+    if args.push:
+        try:
+            from scripts.update_submission_checklist import update_checklist
+            update_checklist(output_dir=args.output, push=True, set_id=args.set_id)
+        except Exception:
+            pass
+    print(dest)
     return 0
 
 

@@ -24,7 +24,7 @@ from ai_image_automation.registry import LicenseRegistry, load_registry
 from ai_image_automation.stock_metadata import export_csv, validate_catalog
 
 
-def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_staging: bool = False):
+def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_staging: bool = False, push: bool = False):
     print(f"\n=======================================================", flush=True)
     print(f"Starting 4K Stock Pipeline for Set: {set_id}", flush=True)
     print(f"Directory: {set_dir}", flush=True)
@@ -288,6 +288,18 @@ def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_
     print(f"\nSUCCESS: Set {set_id} packaged and audited at 4K (4096x4096px)!", flush=True)
 
     # ---------------------------------------------------------
+    # STAGE 6.5: Update Stock Submission Checklist & Deploy
+    # ---------------------------------------------------------
+    print(f"\n--- STAGE 6.5: Updating Stock Submission Checklist ---", flush=True)
+    cmd_checklist = [
+        sys.executable, str(ROOT / "scripts" / "update_submission_checklist.py"),
+        "--set-id", set_id,
+    ]
+    if push:
+        cmd_checklist.append("--push")
+    subprocess.run(cmd_checklist, cwd=ROOT, check=True)
+
+    # ---------------------------------------------------------
     # STAGE 7: Clean Staging & Intermediate Junk Files
     # ---------------------------------------------------------
     if not keep_staging:
@@ -306,6 +318,7 @@ def main():
     parser.add_argument("--set-id", type=str, help="Specific set ID")
     parser.add_argument("--set-dir", type=Path, help="Specific staging directory for set")
     parser.add_argument("--keep-staging", action="store_true", help="Keep intermediate staging image files")
+    parser.add_argument("--push", action="store_true", help="Deploy updated checklist to GitHub Pages")
     args = parser.parse_args()
 
     sets = []
@@ -324,7 +337,7 @@ def main():
         parser.error("Either --set or --set-id must be provided")
 
     for sdir, sid in sets:
-        run_pipeline(sdir, sid, keep_staging=args.keep_staging)
+        run_pipeline(sdir, sid, keep_staging=args.keep_staging, push=args.push)
 
 
 if __name__ == "__main__":
