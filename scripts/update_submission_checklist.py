@@ -651,7 +651,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 6px;
       font-size: 12px;
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
@@ -659,6 +659,10 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       transform: translateY(12px);
       transition: all 0.2s ease;
       pointer-events: none;
+      z-index: 9999;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }}
 
     .sync-badge {{
@@ -701,9 +705,27 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       </div>
     </div>
     <div class="header-links">
-      <button class="btn-link" onclick="openSettings()">⚙ Platforms</button>
-      <button class="btn-link" onclick="exportData()">💾 Backup</button>
-      <a href="https://github.com/armwoottipong/Stock_automation" target="_blank" class="btn-link">GitHub</a>
+      <button class="btn-link" onclick="openSettings()" style="display: inline-flex; align-items: center; gap: 5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="4" y1="21" y2="14"></line>
+          <line x1="4" x2="4" y1="10" y2="3"></line>
+          <line x1="12" x2="12" y1="21" y2="12"></line>
+          <line x1="12" x2="12" y1="8" y2="3"></line>
+          <line x1="20" x2="20" y1="21" y2="16"></line>
+          <line x1="20" x2="20" y1="12" y2="3"></line>
+          <line x1="2" x2="6" y1="14" y2="14"></line>
+          <line x1="10" x2="14" y1="8" y2="8"></line>
+          <line x1="18" x2="22" y1="16" y2="16"></line>
+        </svg>
+        <span>Platforms</span>
+      </button>
+      <a href="https://github.com/armwoottipong/Stock_automation" target="_blank" class="btn-link" style="display: inline-flex; align-items: center; gap: 5px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+          <path d="M9 18c-4.51 2-5-2-7-2"></path>
+        </svg>
+        <span>GitHub</span>
+      </a>
     </div>
   </header>
 
@@ -762,7 +784,10 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   </div>
 </div>
 
-<div class="toast" id="toast">☁️ Saved to Database</div>
+<div class="toast" id="toast">
+  <span id="toastIcon" style="display:inline-flex; align-items:center;"></span>
+  <span id="toastMsg">Saved to Database</span>
+</div>
 
 <script>
   // Initial projects embedded by pipeline
@@ -865,7 +890,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     sortProjects();
     updateSortButtonUI();
     renderList();
-    showToast(appState.sortOrder === "desc" ? "Sorted: Newest first" : "Sorted: Oldest first");
+    showToast(appState.sortOrder === "desc" ? "Sorted: Newest first" : "Sorted: Oldest first", "sort");
   }}
 
   function loadDeletedProjects() {{
@@ -882,10 +907,10 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     }}
   }}
 
-  function saveDeletedProjects(customToast) {{
+  function saveDeletedProjects(customToast, iconType = "cloud") {{
     try {{
       localStorage.setItem(DELETED_KEY, JSON.stringify(appState.deleted_projects));
-      pushToCloud(customToast || "☁️ Saved to Database");
+      pushToCloud(customToast || "Saved to Database", iconType);
     }} catch (e) {{
       console.error(e);
     }}
@@ -896,13 +921,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     if (!appState.deleted_projects.includes(setId)) {{
       appState.deleted_projects.push(setId);
     }}
-    saveDeletedProjects(`🗑️ Removed ${{setId}}`);
+    saveDeletedProjects(`Removed ${{setId}}`, "trash");
     renderApp();
   }}
 
   function restoreProject(setId) {{
     appState.deleted_projects = appState.deleted_projects.filter(id => id !== setId);
-    saveDeletedProjects(`↩️ Restored ${{setId}}`);
+    saveDeletedProjects(`Restored ${{setId}}`, "restore");
     renderDeletedList();
     renderApp();
   }}
@@ -967,9 +992,9 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
 
   let pushTimer = null;
 
-  function pushToCloud(customMsg) {{
+  function pushToCloud(customMsg, iconType = "cloud") {{
     if (!firestoreDb) {{
-      showToast(customMsg || "💾 Saved locally (Offline)");
+      showToast(customMsg || "Saved locally (Offline)", iconType === "cloud" ? "offline" : iconType);
       return;
     }}
     if (isCloudSyncing) return;
@@ -983,11 +1008,11 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
         last_updated: new Date().toISOString()
       }}, {{ merge: true }})
       .then(() => {{
-        showToast(customMsg || "☁️ Saved to Database");
+        showToast(customMsg || "Saved to Database", iconType);
       }})
       .catch(err => {{
         console.warn("Cloud push warning:", err.message);
-        showToast("💾 Saved locally (Cloud offline)");
+        showToast("Saved locally (Cloud offline)", "offline");
       }});
     }}, 120);
   }}
@@ -1009,7 +1034,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   function savePlatforms() {{
     try {{
       localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
-      pushToCloud("☁️ Agencies updated & synced");
+      pushToCloud("Agencies updated & synced", "settings");
     }} catch (e) {{
       console.error(e);
     }}
@@ -1027,13 +1052,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     }}
   }}
 
-  function saveSubmissions(customToast) {{
+  function saveSubmissions(customToast, iconType = "cloud") {{
     try {{
       localStorage.setItem(STORAGE_KEY, JSON.stringify({{
         version: 2,
         submissions: appState.submissions
       }}));
-      pushToCloud(customToast || "☁️ Saved to Database");
+      pushToCloud(customToast || "Saved to Database", iconType);
     }} catch (e) {{
       console.error(e);
     }}
@@ -1102,13 +1127,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     localStorage.setItem(STORAGE_KEY, JSON.stringify({{ version: 2, submissions: appState.submissions }}));
     if (noteTimer) clearTimeout(noteTimer);
     noteTimer = setTimeout(() => {{
-      pushToCloud("☁️ Note saved to Database");
+      pushToCloud("Note saved to Database", "cloud");
     }}, 400);
   }}
 
   function copySetId(setId) {{
     navigator.clipboard.writeText(setId).then(() => {{
-      showToast(`📋 Copied ${{setId}}`);
+      showToast(`Copied ${{setId}}`, "copy");
     }}).catch(() => {{}});
   }}
 
@@ -1161,7 +1186,14 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     list.innerHTML = appState.platforms.map((plat, idx) => `
       <div class="platform-tag">
         <span>${{plat}}</span>
-        ${{appState.platforms.length > 1 ? `<span class="remove-tag" onclick="removePlatform(${{idx}})">✕</span>` : ''}}
+        ${{appState.platforms.length > 1 ? `
+          <span class="remove-tag" onclick="removePlatform(${{idx}})" title="Remove platform" style="display:inline-flex; align-items:center;">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </span>
+        ` : ''}}
       </div>
     `).join("");
   }}
@@ -1186,28 +1218,23 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     renderApp();
   }}
 
-  function exportData() {{
-    const data = {{
-      version: 2,
-      exported_at: new Date().toISOString(),
-      platforms: appState.platforms,
-      submissions: appState.submissions,
-      deleted_projects: appState.deleted_projects
-    }};
-    const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: "application/json" }});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `stock_checklist_backup.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("Downloaded backup JSON");
-  }}
+  const ICONS = {{
+    cloud: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',
+    copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+    trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>',
+    restore: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>',
+    offline: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>',
+    settings: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg>',
+    sort: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="M11 4h10"/><path d="M11 8h7"/><path d="M11 12h4"/></svg>'
+  }};
 
-  function showToast(msg) {{
+  function showToast(msg, iconType = "cloud") {{
     const toast = document.getElementById("toast");
+    const iconEl = document.getElementById("toastIcon");
+    const msgEl = document.getElementById("toastMsg");
     if (!toast) return;
-    toast.textContent = msg;
+    if (iconEl) iconEl.innerHTML = ICONS[iconType] || ICONS.cloud;
+    if (msgEl) msgEl.textContent = msg;
     toast.classList.add("show");
     if (window._toastTimeout) clearTimeout(window._toastTimeout);
     window._toastTimeout = setTimeout(() => toast.classList.remove("show"), 2200);
@@ -1246,7 +1273,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
 
           <div class="todo-meta-line">
             <span>${{p.image_count}} assets · ${{p.created_at || p.date}}${{p.catalog_title ? ` · ${{p.catalog_title}}` : ''}}</span>
-            <span class="set-id" onclick="copySetId('${{p.id}}')" title="Click to copy folder name" style="cursor:pointer; opacity:0.8;">📋 Copy</span>
+            <span class="set-id" onclick="copySetId('${{p.id}}')" title="Click to copy folder name" style="cursor:pointer; display:inline-flex; align-items:center; gap:4px; opacity:0.8;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+              </svg>
+              <span>Copy</span>
+            </span>
           </div>
 
           <div class="platforms-checklist">
