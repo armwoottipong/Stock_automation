@@ -151,6 +151,9 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stock Submission Checklist | Minimal Editorial</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
     :root {{
       --bg: #faf9f6;
@@ -596,6 +599,26 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       pointer-events: none;
     }}
 
+    .sync-badge {{
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }}
+
+    .sync-dot {{
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+    }}
+
+    .sync-dot.offline {{
+      background: #eab308;
+    }}
+
     .toast.show {{
       opacity: 1;
       transform: translateY(0);
@@ -610,6 +633,10 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     <div class="title-group">
       <h1>Stock Submissions</h1>
       <p id="statusCounter">7 projects · microstock dispatch checklist</p>
+      <div class="sync-badge">
+        <span class="sync-dot" id="syncDot"></span>
+        <span id="syncText">Connecting to cloud...</span>
+      </div>
     </div>
     <div class="header-links">
       <button class="btn-link" onclick="openSettings()">⚙ Platforms</button>
@@ -668,6 +695,20 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   const STORAGE_KEY = "stock_submission_checklist_v1";
   const PLATFORMS_KEY = "stock_configured_platforms_v1";
 
+  // Firebase configuration
+  const firebaseConfig = {{
+    apiKey: "AIzaSyDz7Dkve8Kh0JD3LXzGK1iVB3PFnlUNhCE",
+    authDomain: "stock-checklist-57743.firebaseapp.com",
+    projectId: "stock-checklist-57743",
+    storageBucket: "stock-checklist-57743.firebasestorage.app",
+    messagingSenderId: "1073765326022",
+    appId: "1:1073765326022:web:dba9769de45523d0e30bc7",
+    measurementId: "G-77202SNTD4"
+  }};
+
+  let firestoreDb = null;
+  let isCloudSyncing = false;
+
   let appState = {{
     projects: [],
     platforms: [...DEFAULT_PLATFORMS],
@@ -682,6 +723,76 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     mergeProjects(INITIAL_PROJECTS);
     tryFetchProjects();
     renderApp();
+    initFirebase();
+  }}
+
+  function initFirebase() {{
+    try {{
+      if (typeof firebase !== "undefined" && firebaseConfig && firebaseConfig.apiKey) {{
+        if (!firebase.apps.length) {{
+          firebase.initializeApp(firebaseConfig);
+        }}
+        firestoreDb = firebase.firestore();
+
+        const docRef = firestoreDb.collection("stock_checklist").doc("state");
+        docRef.onSnapshot((doc) => {{
+          if (doc.exists) {{
+            const data = doc.data();
+            isCloudSyncing = true;
+            if (data.submissions) {{
+              appState.submissions = Object.assign(appState.submissions, data.submissions);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify({{ version: 2, submissions: appState.submissions }}));
+            }}
+            if (Array.isArray(data.platforms) && data.platforms.length > 0) {{
+              appState.platforms = data.platforms;
+              localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
+            }}
+            isCloudSyncing = false;
+            setSyncStatus(true, "Firebase Real-time Synced");
+            renderApp();
+          }} else {{
+            pushToCloud();
+            setSyncStatus(true, "Firebase Real-time Synced");
+          }}
+        }}, (err) => {{
+          console.warn("Firestore error:", err.message);
+          setSyncStatus(false, "Local Cache (Enable Firestore in Test Mode)");
+        }});
+      }} else {{
+        setSyncStatus(false, "Local Cache");
+      }}
+    }} catch (e) {{
+      console.warn("Firebase init error:", e);
+      setSyncStatus(false, "Local Cache");
+    }}
+  }}
+
+  function setSyncStatus(isLive, label) {{
+    const dot = document.getElementById("syncDot");
+    const text = document.getElementById("syncText");
+    if (dot && text) {{
+      if (isLive) {{
+        dot.className = "sync-dot";
+      }} else {{
+        dot.className = "sync-dot offline";
+      }}
+      text.textContent = label;
+    }}
+  }}
+
+  function pushToCloud() {{
+    if (!firestoreDb || isCloudSyncing) return;
+    try {{
+      firestoreDb.collection("stock_checklist").doc("state").set({{
+        submissions: appState.submissions,
+        platforms: appState.platforms,
+        last_updated: new Date().toISOString()
+      }}, {{ merge: true }}).catch(err => {{
+        console.warn("Cloud push warning:", err.message);
+      }});
+    }} catch (e) {{
+      console.error(e);
+    }}
   }}
 
   function loadPlatforms() {{
@@ -702,6 +813,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     try {{
       localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
       showToast("Agencies updated");
+      pushToCloud();
     }} catch (e) {{
       console.error(e);
     }}
@@ -726,6 +838,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
         submissions: appState.submissions
       }}));
       showToast("Saved to local storage");
+      pushToCloud();
     }} catch (e) {{
       console.error(e);
     }}
