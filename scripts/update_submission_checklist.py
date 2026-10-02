@@ -676,7 +676,13 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       <button type="submit" class="btn-add">+ Add</button>
     </form>
 
-    <div class="modal-actions">
+    <div id="restoreSection" style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); display: none;">
+      <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">Removed Projects</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Hidden from checklist. Click restore to put back in list.</div>
+      <div id="deletedList" style="display: flex; flex-direction: column; gap: 6px; max-height: 140px; overflow-y: auto;"></div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 16px;">
       <button class="btn-link" onclick="closeSettings()">Done</button>
     </div>
   </div>
@@ -694,6 +700,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   // LocalStorage keys
   const STORAGE_KEY = "stock_submission_checklist_v1";
   const PLATFORMS_KEY = "stock_configured_platforms_v1";
+  const DELETED_KEY = "stock_deleted_projects_v1";
 
   // Firebase configuration
   const firebaseConfig = {{
@@ -713,6 +720,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     projects: [],
     platforms: [...DEFAULT_PLATFORMS],
     submissions: {{}},
+    deleted_projects: [],
     currentFilter: "all",
     searchQuery: ""
   }};
@@ -720,10 +728,52 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   function initApp() {{
     loadPlatforms();
     loadSubmissions();
+    loadDeletedProjects();
     mergeProjects(INITIAL_PROJECTS);
     tryFetchProjects();
     renderApp();
     initFirebase();
+  }}
+
+  function loadDeletedProjects() {{
+    try {{
+      const raw = localStorage.getItem(DELETED_KEY);
+      if (raw) {{
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {{
+          appState.deleted_projects = parsed;
+        }}
+      }}
+    }} catch (e) {{
+      console.error(e);
+    }}
+  }}
+
+  function saveDeletedProjects() {{
+    try {{
+      localStorage.setItem(DELETED_KEY, JSON.stringify(appState.deleted_projects));
+      pushToCloud();
+    }} catch (e) {{
+      console.error(e);
+    }}
+  }}
+
+  function deleteProject(setId) {{
+    if (!confirm(`Are you sure you want to remove "${{setId}}" from the checklist?`)) return;
+    if (!appState.deleted_projects.includes(setId)) {{
+      appState.deleted_projects.push(setId);
+    }}
+    saveDeletedProjects();
+    showToast(`Removed ${{setId}}`);
+    renderApp();
+  }}
+
+  function restoreProject(setId) {{
+    appState.deleted_projects = appState.deleted_projects.filter(id => id !== setId);
+    saveDeletedProjects();
+    renderDeletedList();
+    renderApp();
+    showToast(`Restored ${{setId}}`);
   }}
 
   function initFirebase() {{
@@ -746,6 +796,10 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
             if (Array.isArray(data.platforms) && data.platforms.length > 0) {{
               appState.platforms = data.platforms;
               localStorage.setItem(PLATFORMS_KEY, JSON.stringify(appState.platforms));
+            }}
+            if (Array.isArray(data.deleted_projects)) {{
+              appState.deleted_projects = data.deleted_projects;
+              localStorage.setItem(DELETED_KEY, JSON.stringify(appState.deleted_projects));
             }}
             isCloudSyncing = false;
             setSyncStatus(true, "Firebase Real-time Synced");
@@ -786,6 +840,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       firestoreDb.collection("stock_checklist").doc("state").set({{
         submissions: appState.submissions,
         platforms: appState.platforms,
+        deleted_projects: appState.deleted_projects,
         last_updated: new Date().toISOString()
       }}, {{ merge: true }}).catch(err => {{
         console.warn("Cloud push warning:", err.message);
@@ -926,7 +981,25 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   // Settings Modal Functions
   function openSettings() {{
     renderPlatformTags();
+    renderDeletedList();
     document.getElementById("settingsModal").classList.add("open");
+  }}
+
+  function renderDeletedList() {{
+    const sec = document.getElementById("restoreSection");
+    const list = document.getElementById("deletedList");
+    if (!sec || !list) return;
+    if (appState.deleted_projects.length === 0) {{
+      sec.style.display = "none";
+      return;
+    }}
+    sec.style.display = "block";
+    list.innerHTML = appState.deleted_projects.map(id => `
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: var(--bg); padding: 5px 8px; border-radius: 4px; border: 1px solid var(--border);">
+        <span style="font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px;">${{id}}</span>
+        <button class="row-btn" style="color: var(--accent); font-weight: 600;" onclick="restoreProject('${{id}}')">Restore</button>
+      </div>
+    `).join("");
   }}
 
   function closeSettings() {{
@@ -972,7 +1045,8 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
       version: 2,
       exported_at: new Date().toISOString(),
       platforms: appState.platforms,
-      submissions: appState.submissions
+      submissions: appState.submissions,
+      deleted_projects: appState.deleted_projects
     }};
     const blob = new Blob([JSON.stringify(data, null, 2)], {{ type: "application/json" }});
     const url = URL.createObjectURL(blob);
@@ -996,6 +1070,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
     const q = appState.searchQuery;
 
     const filtered = appState.projects.filter(p => {{
+      if (appState.deleted_projects.includes(p.id)) return false;
       const sub = appState.submissions[p.id] || {{}};
       const complete = isSetComplete(p.id);
       const text = `${{p.id}} ${{p.title}} ${{sub.notes || ''}}`.toLowerCase();
@@ -1041,6 +1116,7 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
 
           <div class="row-footer">
             <button class="row-btn" onclick="toggleNotes('${{p.id}}')">${{sub.notes ? 'Edit note' : '+ Add note'}}</button>
+            <button class="row-btn" style="color: var(--text-dim);" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-dim)'" onclick="deleteProject('${{p.id}}')" title="Remove from checklist">Delete</button>
           </div>
 
           <div class="row-notes ${{sub.notes ? 'open' : ''}}" id="notes_${{p.id}}">
@@ -1052,8 +1128,9 @@ def build_checklist_html(projects: list[dict[str, Any]]) -> str:
   }}
 
   function renderApp() {{
-    const total = appState.projects.length;
-    const completed = appState.projects.filter(p => isSetComplete(p.id)).length;
+    const active = appState.projects.filter(p => !appState.deleted_projects.includes(p.id));
+    const total = active.length;
+    const completed = active.filter(p => isSetComplete(p.id)).length;
     const pending = total - completed;
     document.getElementById("statusCounter").textContent = `${{total}} sets · ${{pending}} pending · ${{completed}} completed`;
     renderList();
