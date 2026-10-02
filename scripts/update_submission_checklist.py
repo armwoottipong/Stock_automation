@@ -1517,25 +1517,30 @@ def update_checklist(
             "keywords_sample": [],
         })
 
-    # 1. Write projects.json
+    # 1. Write projects.json (both docs/ and root for universal GitHub Pages support)
     json_path = docs_path / "projects.json"
-    json_path.write_text(json.dumps(projects, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    json_text = json.dumps(projects, indent=2, ensure_ascii=False) + "\n"
+    json_path.write_text(json_text, encoding="utf-8")
+    if docs_path.resolve() != ROOT.resolve():
+        (ROOT / "projects.json").write_text(json_text, encoding="utf-8")
 
-    # 2. Write index.html
+    # 2. Write index.html (both docs/ and root)
     html_path = docs_path / "index.html"
     html_content = build_checklist_html(projects)
     html_path.write_text(html_content, encoding="utf-8")
+    if docs_path.resolve() != ROOT.resolve():
+        (ROOT / "index.html").write_text(html_content, encoding="utf-8")
 
     if verbose:
         print(f"Checklist updated: {len(projects)} projects recorded.")
-        print(f"  JSON: {json_path}")
-        print(f"  HTML: {html_path}")
+        print(f"  JSON: {json_path} & {ROOT / 'projects.json'}")
+        print(f"  HTML: {html_path} & {ROOT / 'index.html'}")
 
     # 3. Optional Git commit & push
     if push:
         try:
             print("\nDeploying checklist to GitHub Pages (git push)...", flush=True)
-            subprocess.run(["git", "add", "docs/", ".github/"], cwd=ROOT, check=True)
+            subprocess.run(["git", "add", "docs/", ".github/", "index.html", "projects.json"], cwd=ROOT, check=True)
             commit_msg = f"Update stock submission checklist ({len(projects)} sets)"
             # Check if there are staged changes
             res_diff = subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=ROOT)
