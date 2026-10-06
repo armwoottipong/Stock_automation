@@ -24,11 +24,25 @@ from ai_image_automation.registry import LicenseRegistry, load_registry
 from ai_image_automation.stock_metadata import export_csv, validate_catalog
 
 
-def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_staging: bool = False, push: bool = False):
+def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_staging: bool = False, push: bool = False, gemini_cull: bool | None = None):
     print(f"\n=======================================================", flush=True)
     print(f"Starting 4K Stock Pipeline for Set: {set_id}", flush=True)
     print(f"Directory: {set_dir}", flush=True)
     print(f"=======================================================\n", flush=True)
+
+    # Automatically run Gemini Culling & Pre-metadata by default if API key is configured
+    should_cull = gemini_cull
+    if should_cull is None:
+        try:
+            from ai_image_automation.gemini_service import load_gemini_api_key
+            load_gemini_api_key(ROOT)
+            should_cull = True
+        except Exception:
+            should_cull = False
+
+    if should_cull:
+        from scripts.cull_and_prepare_metadata import run_cull_and_prepare_metadata
+        run_cull_and_prepare_metadata(set_dir)
 
     raw_dir = set_dir / "raw_1024"
     upscaled_dir = set_dir / "upscaled_4k"
@@ -155,12 +169,35 @@ def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_
     # STAGE 4: Stock Metadata Preparation & Validation
     # ---------------------------------------------------------
     print(f"\n--- STAGE 4: Stock Metadata Preparation ---", flush=True)
-    # Check if catalog exists or build from existing catalog
     existing_catalog_file = set_dir / "catalog.json"
+    draft_meta_file = set_dir / "draft_metadata.json"
     if existing_catalog_file.exists():
         catalog = json.loads(existing_catalog_file.read_text(encoding="utf-8"))
+    elif draft_meta_file.exists():
+        draft_meta = json.loads(draft_meta_file.read_text(encoding="utf-8"))
+        records = []
+        for png_path in sorted(cutout_dir.glob("*.png")):
+            stem = png_path.stem
+            item_meta = draft_meta.get(stem, {})
+            title = item_meta.get("title") or stem.replace("_", " ").title()
+            kws = item_meta.get("keywords") or ["isolated", "white background", "object"]
+            cat = item_meta.get("category", 3)
+            records.append({
+                "filename": png_path.name,
+                "title": title,
+                "keywords": kws,
+                "adobe_category": cat,
+            })
+        catalog = {
+            "schema_version": 1,
+            "source_type": "generative_ai",
+            "language": "en",
+            "records": records,
+        }
+        existing_catalog_file.write_text(json.dumps(catalog, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"Compiled catalog.json from draft_metadata.json ({len(records)} records).", flush=True)
     else:
-        raise FileNotFoundError(f"Missing catalog.json in {set_dir}")
+        raise FileNotFoundError(f"Missing catalog.json and draft_metadata.json in {set_dir}")
 
     # Re-validate with cutout_4k
     validate_catalog(catalog, "adobe", cutout_dir)
@@ -173,15 +210,23 @@ def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_
     # ---------------------------------------------------------
     print(f"\n--- STAGE 5: Embed XMP Metadata ---", flush=True)
     adobe_pkg.mkdir(parents=True, exist_ok=True)
-    cmd_embed = [
-        sys.executable, str(ROOT / "scripts" / "embed_stock_metadata.py"),
-        "--catalog", str(existing_catalog_file),
-        "--assets", str(cutout_dir),
-        "--output", str(adobe_pkg),
-        "--platform", "adobe",
-    ]
-    subprocess.run(cmd_embed, cwd=ROOT, check=True)
-    print("Embedded XMP metadata into all 4K transparent PNGs.", flush=True)
+    has_exiftool = bool(shutil.which("exiftool"))
+    if has_exiftool:
+        cmd_embed = [
+            sys.executable, str(ROOT / "scripts" / "embed_stock_metadata.py"),
+            "--catalog", str(existing_catalog_file),
+            "--assets", str(cutout_dir),
+            "--output", str(adobe_pkg),
+            "--platform", "adobe",
+        ]
+        subprocess.run(cmd_embed, cwd=ROOT, check=True)
+        print("Embedded XMP metadata into all 4K transparent PNGs.", flush=True)
+    else:
+        print("Notice: exiftool not found in PATH; copying PNG assets directly (metadata stored in CSV).", flush=True)
+        for png_path in sorted(cutout_dir.glob("*.png")):
+            target = adobe_pkg / png_path.name
+            if not target.exists():
+                shutil.copy2(png_path, target)
 
     # ---------------------------------------------------------
     # STAGE 6: Packaging & Final Audit (Clean Structure)
@@ -203,24 +248,25 @@ def run_pipeline(set_dir: Path, set_id: str, max_items: int | None = None, keep_
                 bg.paste(rgba, mask=rgba.split()[3])
                 bg.save(jpg_path, "JPEG", quality=95, subsampling=0)
 
-    # Batch copy metadata from adobe_stock PNGs to JPEGs
-    cmd_meta = [
-        "exiftool", "-overwrite_original", "-q", "-q",
-        "-tagsFromFile", f"{adobe_pkg}/%f.png",
-        "-all:all", "-ext", "jpg", str(white_jpg_pkg),
-    ]
-    subprocess.run(cmd_meta, cwd=ROOT, check=True)
+    if has_exiftool:
+        # Batch copy metadata from adobe_stock PNGs to JPEGs
+        cmd_meta = [
+            "exiftool", "-overwrite_original", "-q", "-q",
+            "-tagsFromFile", f"{adobe_pkg}/%f.png",
+            "-all:all", "-ext", "jpg", str(white_jpg_pkg),
+        ]
+        subprocess.run(cmd_meta, cwd=ROOT, check=True)
 
-    # Sanitize JPEG metadata: remove any transparent tags and add white background tag
-    cmd_sanitize = [
-        "exiftool", "-overwrite_original", "-q", "-q",
-        "-XMP-dc:Subject-=transparent background",
-        "-XMP-dc:Subject-=transparent",
-        "-XMP-dc:Subject-=transparency",
-        "-XMP-dc:Subject+=white background",
-        "-ext", "jpg", str(white_jpg_pkg),
-    ]
-    subprocess.run(cmd_sanitize, cwd=ROOT, check=True)
+        # Sanitize JPEG metadata: remove any transparent tags and add white background tag
+        cmd_sanitize = [
+            "exiftool", "-overwrite_original", "-q", "-q",
+            "-XMP-dc:Subject-=transparent background",
+            "-XMP-dc:Subject-=transparent",
+            "-XMP-dc:Subject-=transparency",
+            "-XMP-dc:Subject+=white background",
+            "-ext", "jpg", str(white_jpg_pkg),
+        ]
+        subprocess.run(cmd_sanitize, cwd=ROOT, check=True)
 
     # 2. Build metadata package (dedicated folder for CSV, catalog, manifests, contact sheet)
     meta_pkg = pkg_dir / "metadata"
@@ -319,7 +365,15 @@ def main():
     parser.add_argument("--set-dir", type=Path, help="Specific staging directory for set")
     parser.add_argument("--keep-staging", action="store_true", help="Keep intermediate staging image files")
     parser.add_argument("--push", action="store_true", help="Deploy updated checklist to GitHub Pages")
+    parser.add_argument("--gemini-cull", action="store_true", default=None, help="Force Gemini metadata pre-generation and vision QC")
+    parser.add_argument("--skip-gemini-cull", action="store_true", help="Skip Gemini metadata pre-generation and vision QC")
     args = parser.parse_args()
+
+    cull_flag = None
+    if args.skip_gemini_cull:
+        cull_flag = False
+    elif args.gemini_cull:
+        cull_flag = True
 
     sets = []
     if args.set_id and args.set_dir:
@@ -337,7 +391,7 @@ def main():
         parser.error("Either --set or --set-id must be provided")
 
     for sdir, sid in sets:
-        run_pipeline(sdir, sid, keep_staging=args.keep_staging, push=args.push)
+        run_pipeline(sdir, sid, keep_staging=args.keep_staging, push=args.push, gemini_cull=cull_flag)
 
 
 if __name__ == "__main__":
