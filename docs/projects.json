@@ -1,5 +1,531 @@
 [
   {
+    "id": "christmas_snow_isolates_200_2026-11-06_001",
+    "date": "2026-11-06",
+    "created_at": "2026-11-06 08:20",
+    "timestamp": 1793928049.7869267,
+    "title": "christmas_snow_isolates_200_2026-11-06_001",
+    "catalog_title": "Glossy Red Glass Christmas Bauble Ornament Isolated",
+    "image_count": 1,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "christmas bauble",
+      "red ornament",
+      "tree decoration",
+      "glass sphere",
+      "holiday decor"
+    ]
+  },
+  {
+    "id": "watercolor_mountains_16x9_100_2026-10-28_001",
+    "date": "2026-10-28",
+    "created_at": "2026-10-28 17:09",
+    "timestamp": 1793182160.8625374,
+    "title": "watercolor_mountains_16x9_100_2026-10-28_001",
+    "catalog_title": "Indigo Mountain Ridges Watercolor Landscape Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "mountain",
+      "watercolor",
+      "background",
+      "landscape",
+      "mist"
+    ]
+  },
+  {
+    "id": "winter_textures_16x9_100_2026-10-28_001",
+    "date": "2026-10-28",
+    "created_at": "2026-10-28 14:10",
+    "timestamp": 1793171436.145328,
+    "title": "winter_textures_16x9_100_2026-10-28_001",
+    "catalog_title": "Delicate Winter Frost Crystals Texture Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "winter",
+      "background",
+      "texture",
+      "backdrop",
+      "wallpaper"
+    ]
+  },
+  {
+    "id": "gemstones_3d_100_2026-10-27_001",
+    "date": "2026-10-27",
+    "created_at": "2026-10-27 15:32",
+    "timestamp": 1793089960.2502131,
+    "title": "gemstones_3d_100_2026-10-27_001",
+    "catalog_title": "Round Cut Diamond Gemstone 3D Side Profile Isolated",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "diamond",
+      "brilliant cut",
+      "round diamond",
+      "side view",
+      "perspective"
+    ]
+  },
+  {
+    "id": "gemstones_minerals_200_2026-10-27_001",
+    "date": "2026-10-27",
+    "created_at": "2026-10-27 12:22",
+    "timestamp": 1793078577.690026,
+    "title": "gemstones_minerals_200_2026-10-27_001",
+    "catalog_title": "Round Brilliant Cut Diamond Gemstone Isolated",
+    "image_count": 200,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "diamond",
+      "brilliant cut",
+      "sparkle",
+      "gemstone",
+      "precious stone"
+    ]
+  },
+  {
+    "id": "flower_petals_flatlay_2026-10-13_002",
+    "date": "2026-10-13",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918545.007306,
+    "title": "flower_petals_flatlay_2026-10-13_002",
+    "catalog_title": "Pink Flower Petals Scattered Pattern Flat Lay on White Background",
+    "image_count": 1,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": false,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "flower petals",
+      "pink petals",
+      "scattered petals",
+      "daisy petals",
+      "flower petal pattern"
+    ]
+  },
+  {
+    "id": "flower_petals_flatlay_2026-10-13_001",
+    "date": "2026-10-13",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918545.00523,
+    "title": "flower_petals_flatlay_2026-10-13_001",
+    "catalog_title": "Delicate Pink Flower Petals Scattered Flat Lay on White Background",
+    "image_count": 1,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": false,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "flower petals",
+      "pink petals",
+      "flat lay",
+      "rose petals",
+      "scattered petals"
+    ]
+  },
+  {
+    "id": "flower_petals_100_2026-10-13_002",
+    "date": "2026-10-13",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918545.0012932,
+    "title": "flower_petals_100_2026-10-13_002",
+    "catalog_title": "Saucer Magnolia Petals Scattered Flat Lay on White Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "saucer magnolia",
+      "magnolia petals",
+      "blush pink",
+      "waxy petals",
+      "saucer magnolia petals"
+    ]
+  },
+  {
+    "id": "flower_petals_100_2026-10-13_001",
+    "date": "2026-10-13",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918544.9840982,
+    "title": "flower_petals_100_2026-10-13_001",
+    "catalog_title": "Pink Cosmos Petals Scattered Flat Lay on White Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "cosmos",
+      "pink cosmos",
+      "blush pink",
+      "magenta",
+      "pink cosmos petals"
+    ]
+  },
+  {
+    "id": "fruit_flatlay_100_2026-10-13_002",
+    "date": "2026-10-13",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918544.9685812,
+    "title": "fruit_flatlay_100_2026-10-13_002",
+    "catalog_title": "Fresh Finger Lime Scattered Flat Lay on Pastel Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "finger lime",
+      "citrus caviar",
+      "australian lime",
+      "caviar lime",
+      "finger lime flat lay"
+    ]
+  },
+  {
+    "id": "fruit_flatlay_100_2026-10-13_001",
+    "date": "2026-10-13",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918544.5392473,
+    "title": "fruit_flatlay_100_2026-10-13_001",
+    "catalog_title": "Fresh Strawberry Scattered Flat Lay on Pastel Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "strawberry",
+      "strawberries",
+      "fresh berries",
+      "halved strawberry",
+      "strawberry flat lay"
+    ]
+  },
+  {
+    "id": "fruit_isolates_2026-09-26_new",
+    "date": "2026-09-26",
+    "created_at": "2026-10-25 15:55",
+    "timestamp": 1792918522.0841882,
+    "title": "fruit_isolates_2026-09-26_new",
+    "catalog_title": "Ripe red apple isolated on transparent background",
+    "image_count": 25,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": []
+  },
+  {
+    "id": "bread_isolates_2026-09-28_001",
+    "date": "2026-09-28",
+    "created_at": "2026-10-25 15:53",
+    "timestamp": 1792918412.491014,
+    "title": "bread_isolates_2026-09-28_001",
+    "catalog_title": "Baguette bread long golden loaf with diagonal scoring isolated",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "baguette bread",
+      "long golden loaf with diagonal scoring",
+      "bread",
+      "bakery",
+      "baked"
+    ]
+  },
+  {
+    "id": "fall_leaves_collection_2026-10-22_001",
+    "date": "2026-10-22",
+    "created_at": "2026-10-22 09:48",
+    "timestamp": 1792637292.184097,
+    "title": "fall_leaves_collection_2026-10-22_001",
+    "catalog_title": "Aged Dark Barnwood Texture Background with Autumn Foliage Border",
+    "image_count": 200,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "autumn",
+      "fall",
+      "background",
+      "leaves",
+      "texture"
+    ]
+  },
+  {
+    "id": "halloween_textures_16x9_200_2026-10-19_001",
+    "date": "2026-10-19",
+    "created_at": "2026-10-19 14:44",
+    "timestamp": 1792395865.7756126,
+    "title": "halloween_textures_16x9_200_2026-10-19_001",
+    "catalog_title": "Aged Weathered Black Barnwood Texture Background with Copy Space",
+    "image_count": 200,
+    "packages": [
+      "adobe_stock",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": false,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "halloween",
+      "background",
+      "texture",
+      "backdrop",
+      "wallpaper"
+    ]
+  },
+  {
+    "id": "candy_sticks_100_2026-10-15_001",
+    "date": "2026-10-15",
+    "created_at": "2026-10-16 08:42",
+    "timestamp": 1792114962.2601247,
+    "title": "candy_sticks_100_2026-10-15_001",
+    "catalog_title": "Orange and Black Striped Halloween Candy Stick Isolated",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "orange",
+      "and",
+      "black",
+      "striped",
+      "candy"
+    ]
+  },
+  {
+    "id": "halloween_candy_100_2026-10-15_001",
+    "date": "2026-10-15",
+    "created_at": "2026-10-15 20:23",
+    "timestamp": 1792070582.3312893,
+    "title": "halloween_candy_100_2026-10-15_001",
+    "catalog_title": "Classic Tricolor Candy Corn Sweet Isolated",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "traditional",
+      "tricolor",
+      "candy",
+      "corn",
+      "traditional tricolor candy corn"
+    ]
+  },
+  {
+    "id": "halloween_isolates_200_2026-10-14_001",
+    "date": "2026-10-14",
+    "created_at": "2026-10-14 10:32",
+    "timestamp": 1791948735.7719767,
+    "title": "halloween_isolates_200_2026-10-14_001",
+    "catalog_title": "Carved Jack O Lantern Pumpkin with Grinning Face Isolated",
+    "image_count": 200,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "classic",
+      "toothy",
+      "grin",
+      "carved",
+      "pumpkin"
+    ]
+  },
+  {
+    "id": "packaging_mockups_100_2026-10-07_001",
+    "date": "2026-10-07",
+    "created_at": "2026-10-07 21:47",
+    "timestamp": 1791384450.300923,
+    "title": "packaging_mockups_100_2026-10-07_001",
+    "catalog_title": "Amber Glass Dropper Bottle Mockup on Transparent Background",
+    "image_count": 100,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata",
+      "shutterstock"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": true,
+    "shutterstock_count": 11,
+    "keywords_sample": [
+      "dropper bottle",
+      "cosmetic bottle",
+      "glass dropper",
+      "pipette bottle",
+      "serum bottle"
+    ]
+  },
+  {
+    "id": "packaging_mockups_10_2026-10-07_001",
+    "date": "2026-10-07",
+    "created_at": "2026-10-07 11:16",
+    "timestamp": 1791346615.099643,
+    "title": "packaging_mockups_10_2026-10-07_001",
+    "catalog_title": "Amber Glass Dropper Bottle Mockup Isolated on Transparent Background",
+    "image_count": 10,
+    "packages": [
+      "adobe_stock",
+      "white_jpeg_companion",
+      "metadata"
+    ],
+    "has_csv": true,
+    "has_white_jpg": true,
+    "has_transparent_png": true,
+    "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
+    "keywords_sample": [
+      "dropper bottle",
+      "amber bottle",
+      "cosmetic bottle",
+      "glass dropper",
+      "pipette bottle"
+    ]
+  },
+  {
     "id": "potted_decor_plants_500_2026-10-01_001",
     "date": "2026-10-01",
     "created_at": "2026-10-01 18:20",
@@ -16,6 +542,8 @@
     "has_white_jpg": true,
     "has_transparent_png": true,
     "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
     "keywords_sample": [
       "monstera deliciosa",
       "monstera",
@@ -41,6 +569,8 @@
     "has_white_jpg": true,
     "has_transparent_png": true,
     "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
     "keywords_sample": [
       "ficus lyrata",
       "fig tree",
@@ -66,6 +596,8 @@
     "has_white_jpg": true,
     "has_transparent_png": true,
     "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
     "keywords_sample": [
       "rose",
       "red rose",
@@ -91,6 +623,8 @@
     "has_white_jpg": true,
     "has_transparent_png": true,
     "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
     "keywords_sample": [
       "monstera",
       "greenery",
@@ -116,6 +650,8 @@
     "has_white_jpg": true,
     "has_transparent_png": true,
     "has_contact_sheet": true,
+    "has_shutterstock": false,
+    "shutterstock_count": 0,
     "keywords_sample": [
       "alocasia",
       "plant",
@@ -123,45 +659,5 @@
       "foliage",
       "leaf"
     ]
-  },
-  {
-    "id": "bread_isolates_2026-09-28_001",
-    "date": "2026-09-28",
-    "created_at": "2026-09-28 20:00",
-    "timestamp": 1790600408.719989,
-    "title": "bread_isolates_2026-09-28_001",
-    "catalog_title": "Baguette bread long golden loaf with diagonal scoring isolated",
-    "image_count": 100,
-    "packages": [
-      "adobe_stock"
-    ],
-    "has_csv": true,
-    "has_white_jpg": false,
-    "has_transparent_png": true,
-    "has_contact_sheet": false,
-    "keywords_sample": [
-      "baguette bread",
-      "long golden loaf with diagonal scoring",
-      "bread",
-      "bakery",
-      "baked"
-    ]
-  },
-  {
-    "id": "fruit_isolates_2026-09-26_new",
-    "date": "2026-09-26",
-    "created_at": "2026-09-28 18:33",
-    "timestamp": 1790595193.3592002,
-    "title": "fruit_isolates_2026-09-26_new",
-    "catalog_title": "Ripe red apple isolated on transparent background",
-    "image_count": 25,
-    "packages": [
-      "adobe_stock"
-    ],
-    "has_csv": true,
-    "has_white_jpg": false,
-    "has_transparent_png": true,
-    "has_contact_sheet": false,
-    "keywords_sample": []
   }
 ]

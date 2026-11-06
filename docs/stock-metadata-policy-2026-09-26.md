@@ -29,6 +29,13 @@ These are **draft metadata**, not a cleared upload set. Every image still needs 
 
 The Shutterstock exporter is for future genuine eligible photography. Use truthful `source_type: camera_photo`, English factual metadata, a supported JPEG/TIFF asset set and a valid category. Policy and platform UI rules may change; recheck official guidance before uploading.
 
+## Format Pairing & Metadata Tagging Rules
+
+1. **Tagging Invariant**: Never include "transparent", "transparent background", or "transparency" tags or titles on JPEG images, because JPEG files are composited on solid white (or solid colored) backgrounds. Use "white background" or "isolated on white background" for JPEGs. Reserve "transparent background" and "transparent" exclusively for RGBA transparent PNG assets.
+2. **Format Pairing**: Whenever PNG cutouts are delivered (e.g. `adobe_stock/`), a paired solid-white JPEG companion package (`white_jpeg_companion/`) must always be delivered with sanitized metadata.
+3. **Texture / JPEG-Only Deliverables**: When an asset is a texture, pattern, flatlay, or originally JPEG-only, deliver strictly JPEG only; do NOT create PNG files and do NOT create duplicate companion packages.
+4. **Strictly 100% Image-Only Packaging**: Image delivery folders (`adobe_stock/`, `white_jpeg_companion/`, `shutterstock/`) must contain strictly image files only. All CSV spreadsheets, JSON manifests, and catalogs belong in `metadata/`.
+
 ## Commands
 
 ```powershell

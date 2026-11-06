@@ -99,13 +99,17 @@ Adobe มีรายการ Known Restrictions ที่อัปเดตเ
 
 ## 5. Technical Output Specification สำหรับภาพนิ่ง
 
-* **Format**: JPEG (.jpg/.jpeg)
+* **Format**: JPEG (.jpg/.jpeg) หรือ PNG สำหรับงาน Isolated Cutout โปร่งใส
 * **Color profile**: sRGB
 * **Resolution**: 4–100 megapixels (ต่ำกว่า 4MP reject; สูงกว่า 100MP downsize)
 * **File size**: <= 45MB
 * **Watermark/timestamp/branding**: ต้องไม่มี
 * **Sharpness**: main subject ต้องคม ตรวจที่ 100% zoom
 * **Upscaling**: ห้ามทำให้คุณภาพเสื่อม ถ้าต้นฉบับเล็กควร regenerate ด้วย resolution เหมาะสม
+* **กฎการจับคู่ฟอร์แมตไฟล์ (Format Pairing & Companion Policy)**:
+  - **หากผลลัพธ์เป็น PNG (เช่น งานไดคัท Transparent Cutout)**: ต้องสร้างไฟล์ JPEG คู่กันออกมาเสมอ (White JPEG Companion บนพื้นหลังสีขาวบริสุทธิ์ #FFFFFF คุณภาพสูง sRGB) บรรจุในโฟลเดอร์ `white_jpeg_companion/` พร้อม sanitize metadata ตัดแท็ก transparent ออก และใส่ white background แทน
+  - **หากเป็น Texture / ภาพพื้นผิว / Flatlay หรือระบุส่ง JPEG อย่างเดียว**: ให้มีเฉพาะไฟล์ JPEG เท่านั้น ห้ามสร้างไฟล์ PNG หรือทำไดคัท และไม่ต้องสร้างโฟลเดอร์ companion ซ้ำซ้อน
+  - **Clean Package Invariant (ความสะอาดของโฟลเดอร์ส่งภาพ)**: โฟลเดอร์ส่งภาพ (`adobe_stock/`, `white_jpeg_companion/`, `shutterstock/`) ต้องมีเฉพาะไฟล์รูปภาพ 100% เท่านั้น (ห้ามมีไฟล์ CSV, JSON, MD, TXT หรือเอกสารใดๆ ติดมา) โดยไฟล์เอกสารและ manifest ทั้งหมดต้องถูกจัดเก็บไว้ในโฟลเดอร์ `metadata/` เท่านั้น เพื่อให้สามารถลากอัปโหลด (Drag-and-Drop) เข้าพอร์ทัลสต็อกได้ทันทีโดยไม่ติด Error
 
 ---
 
@@ -138,6 +142,21 @@ Adobe มีรายการ Known Restrictions ที่อัปเดตเ
 | Composition & commercial usability | 15 | ต่ำกว่า 11 → review |
 | Semantic accuracy | 15 | ต่ำกว่า 12 → reject/review |
 | Originality/distinctness | 10 | ต่ำกว่า 7 → reject redundant |
+
+### 6.2 มาตรฐาน Mockup บรรจุภัณฑ์ (Packaging Mockup Standards & Structural Invariants)
+
+บรรจุภัณฑ์สินค้า (Packaging Mockup) เป็นหมวดหมู่อ่อนไหวต่อความผิดพลาดเชิงโครงสร้าง (Structural Hallucinations) ซึ่งส่งผลให้ถูกปฏิเสธใน Visual QC หรือตรวจพบข้อบกพร่องหลังการไดคัท (Alpha Cutout Artifacts). กำหนดหลักการและกฎเฉพาะดังนี้:
+
+* **หลักการ Real-World Reference First**: ก่อนเขียน Prompt หรือสร้างโมเดล ต้องศึกษาตัวอย่างบรรจุภัณฑ์จริงในอุตสาหกรรม (Industrial Packaging Standards) เสมอ เพื่อให้โครงสร้าง รูปทรง รอยพับ และข้อต่อตรงตามหลักวิศวกรรมการผลิตจริง ไม่จินตนาการรูปทรงที่ผิดเพี้ยน
+* **หลักการ Zero Internal Clutter (ลดสิ่งของข้างในที่ไม่จำเป็น)**: ลดหรือยกเลิกการใส่สิ่งของลอยอยู่ภายในภาชนะโปร่งใส (เช่น เม็ดยา แคปซูล ก้อนสารเคมี) เพื่อตัดโอกาสการเกิด AI Hallucination เชิงฟิสิกส์ 3 มิติ
+
+#### กฎโครงสร้างเฉพาะทาง (Packaging Invariants):
+1. **ADS-PKG-001 (Empty Containers / Zero Internal Clutter)**: ภาชนะใสหรือโปร่งแสง (ขวดแก้ว กระปุกใส) ต้องเป็นภาชนะเปล่า (empty container) หรือใช้วัสดุทึบแสง ห้ามใส่สิ่งของหลวมๆ ลอยอยู่ภายใน (เช่น แคปซูล ยาเม็ด) เด็ดขาด เพื่อป้องกันเม็ดยาละลายหรือหลอมรวมกัน
+2. **ADS-PKG-002 (Pouch Closures & Seamless Edges)**: ห้ามใช้คำว่า "zipper" กับซองฟอยล์/ถุงตั้ง (stand-up pouch) เพราะ AI มักเจนเป็นหัวรูดซิปเสื้อแจ็คเก็ตโลหะ ให้ใช้คำว่า "heat sealed top edge" หรือ "press-to-close ridge" แทน และต้องระบุ "smooth continuous edges without tear notches" เสมอ เพื่อป้องกันอัลกอริทึมไดคัท (BiRefNet) กักขังพิกเซลพื้นหลังสีขาวไว้ที่รอยบาก
+3. **ADS-PKG-003 (Internal Tubes & Pipettes)**: ภาชนะใสที่มีหลอดดูด หัวปั๊ม หรือสเปรย์ ต้องระบุอย่างเจาะจงว่าเป็น "single continuous straight vertical tube extending down to the base without joints, rings, or segments" หรือเลือกใช้ขวดทึบแสง (opaque amber glass / matte plastic) เพื่อป้องกันหลอดสั้น หลอดขาด หรือหลอดเป็นข้อปล้อง
+4. **ADS-PKG-004 (Geometric Symmetry & Lids)**: กล่องอาหาร กล่องเบอร์เกอร์ clamshell และกล่องไข่ ต้องเป็นกล่องปิดสนิทที่มีฝาเรียบขนานสมมาตร ("closed box with flush symmetrical flat lid and straight parallel edges") ป้องกันฝาเอียง บิดเบี้ยว หรือมุมกล่องบิดงอ
+5. **ADS-PKG-005 (Handles & Structural Attachments)**: ถุงช้อปปิ้งกระดาษต้องมีหูหิ้วแยก 2 เส้นสมมาตรเรียบร้อยที่ขอบปากถุง ("two separate symmetrical handles neatly looped at the top rim") เลี่ยงหูหิ้วลวดโลหะบางๆ (เช่น กล่องบะหมี่ takeout pail) ที่ AI มักเจนลอยขาด ให้ใช้โครงสร้างกล่องพับแบบกระดาษแทน
+6. **ADS-PKG-006 (Standalone Single Isolation)**: ต้องระบุ "single standalone item" เสมอ เพื่อป้องกัน Generative AI เจนวัตถุซ้อนทับกัน (overlapping secondary items)
 
 ---
 
@@ -242,3 +261,12 @@ Adobe ต้องการ variation ที่มี “ความแตก�
 * **ADS-META-007**: safe default 5–49 keywords (CSV <= 50)
 * **ADS-CSV-001**: CSV UTF-8, <=5,000 rows, <=1MB
 * **ADS-CSV-002**: filename <= 30, title <= 70, keywords <= 50 ใน CSV
+* **ADS-PKG-001**: Empty Containers / Zero Internal Clutter — ภาชนะใสต้องว่างเปล่าหรือเป็นวัสดุทึบ ห้ามเจนยาเม็ด/แคปซูลลอยด้านใน
+* **ADS-PKG-002**: Pouch Closures & Seamless Edges — ห้ามใช้คำว่า zipper สำหรับถุง pouch (ใช้ heat sealed / press-to-close) และขอบต้องเรียบไร้รอยบาก
+* **ADS-PKG-003**: Internal Tubes & Pipettes — หลอดดูด/ปั๊ม/สเปรย์ ต้องเป็นท่อตรงเส้นเดียวไร้ข้อต่อลงถึงก้นขวด หรือใช้ขวดทึบแสง
+* **ADS-PKG-004**: Geometric Symmetry & Lids — กล่องอาหาร/กล่องไข่/clamshell ต้องปิดสนิท ฝาเรียบขนานสมมาตร ป้องกันฝาบิดเบี้ยว
+* **ADS-PKG-005**: Handles & Attachments — ถุงช้อปปิ้งต้องมีหูหิ้วคู่สมมาตร เลี่ยงหูหิ้วลวดบางๆ ให้ใช้ flap พับ
+* **ADS-PKG-006**: Standalone Single Isolation — ระบุชิ้นเดียวเดี่ยวๆ เสมอ ป้องกันการเจนวัตถุซ้อนหรือเบียดกัน
+* **ADS-FMT-001**: PNG Pairing Policy — หากสร้างไฟล์ PNG ไดคัท ต้องสร้างไฟล์ White JPEG Companion คู่กันเสมอ
+* **ADS-FMT-002**: JPEG-Only / Texture Policy — หากเป็นงาน Texture หรือระบุ JPEG ตั้งต้น ให้มีเฉพาะไฟล์ JPEG เท่านั้น ห้ามทำ PNG และไม่ทำโฟลเดอร์คู่ซ้ำซ้อน
+* **ADS-FMT-003**: Clean Image Package — โฟลเดอร์รูปภาพต้องมีเฉพาะไฟล์ภาพ 100% ไร้เอกสารและ JSON/CSV ปะปน (เก็บใน metadata/)
